@@ -182,6 +182,45 @@ func (c *Client) GetJSON(path string, params url.Values, needsCrumb bool, v inte
 	return nil
 }
 
+// GetAbsoluteJSON fetches an absolute URL with crumb auth and unmarshals the JSON response into v.
+func (c *Client) GetAbsoluteJSON(absoluteURL string, params url.Values, v any) error {
+	if err := c.ensureAuth(); err != nil {
+		return err
+	}
+
+	if params == nil {
+		params = url.Values{}
+	}
+	params.Set("crumb", c.getCrumb())
+	fullURL := absoluteURL + "?" + params.Encode()
+
+	body, statusCode, err := c.doGet(fullURL)
+	if err != nil {
+		return err
+	}
+
+	// Retry on 401/403
+	if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+		if err := c.authenticate(); err != nil {
+			return fmt.Errorf("re-authentication failed: %w", err)
+		}
+		params.Set("crumb", c.getCrumb())
+		fullURL = absoluteURL + "?" + params.Encode()
+		body, statusCode, err = c.doGet(fullURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	if statusCode != http.StatusOK {
+		return fmt.Errorf("API request failed with status %d: %s", statusCode, string(body))
+	}
+	if err := json.Unmarshal(body, v); err != nil {
+		return fmt.Errorf("parsing JSON response: %w", err)
+	}
+	return nil
+}
+
 func randomUA() string {
 	return userAgents[rand.Intn(len(userAgents))]
 }

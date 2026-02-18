@@ -138,6 +138,61 @@ func (h *Handlers) HandleGetNews(ctx context.Context, req mcp.CallToolRequest) (
 	return mcp.NewToolResultText(formatNews(symbol, news)), nil
 }
 
+// HandleGetBulkQuotes handles the get_bulk_quotes tool call.
+func (h *Handlers) HandleGetBulkQuotes(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	raw := req.GetString("symbols", "")
+	if raw == "" {
+		return mcp.NewToolResultError("symbols is required"), nil
+	}
+
+	var symbols []string
+	for _, s := range strings.Split(raw, ",") {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			symbols = append(symbols, strings.ToUpper(s))
+		}
+	}
+	if len(symbols) == 0 {
+		return mcp.NewToolResultError("at least one symbol is required"), nil
+	}
+
+	results, err := h.client.GetBulkQuotes(symbols)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk quotes: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(formatBulkQuotes(results)), nil
+}
+
+// HandleGetBulkSpark handles the get_bulk_spark tool call.
+func (h *Handlers) HandleGetBulkSpark(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	raw := req.GetString("symbols", "")
+	if raw == "" {
+		return mcp.NewToolResultError("symbols is required"), nil
+	}
+
+	var symbols []string
+	for _, s := range strings.Split(raw, ",") {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			symbols = append(symbols, strings.ToUpper(s))
+		}
+	}
+	if len(symbols) == 0 {
+		return mcp.NewToolResultError("at least one symbol is required"), nil
+	}
+
+	rangeStr := req.GetString("range", "1mo")
+	interval := req.GetString("interval", "1d")
+
+	results, err := h.client.GetBulkSpark(symbols, rangeStr, interval)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk spark data: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(formatBulkSpark(symbols, results)), nil
+}
+
 // HandleGetProfile handles the get_profile tool call.
 func (h *Handlers) HandleGetProfile(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	symbol := strings.ToUpper(req.GetString("symbol", ""))
@@ -153,7 +208,166 @@ func (h *Handlers) HandleGetProfile(ctx context.Context, req mcp.CallToolRequest
 	return mcp.NewToolResultText(formatProfile(symbol, profile, quoteType)), nil
 }
 
+// HandleGetSector handles the get_sector tool call.
+func (h *Handlers) HandleGetSector(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key := strings.ToLower(strings.TrimSpace(req.GetString("key", "")))
+	if key == "" {
+		return mcp.NewToolResultError("key is required"), nil
+	}
+
+	data, err := h.client.GetSector(key)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get sector %q: %v", key, err)), nil
+	}
+
+	return mcp.NewToolResultText(formatSector(data)), nil
+}
+
+// HandleGetIndustry handles the get_industry tool call.
+func (h *Handlers) HandleGetIndustry(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key := strings.ToLower(strings.TrimSpace(req.GetString("key", "")))
+	if key == "" {
+		return mcp.NewToolResultError("key is required"), nil
+	}
+
+	data, err := h.client.GetIndustry(key)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get industry %q: %v", key, err)), nil
+	}
+
+	return mcp.NewToolResultText(formatIndustry(data)), nil
+}
+
+// HandleGetMarketSummary handles the get_market_summary tool call.
+func (h *Handlers) HandleGetMarketSummary(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	market := strings.ToUpper(strings.TrimSpace(req.GetString("market", "")))
+	if market == "" {
+		return mcp.NewToolResultError("market is required"), nil
+	}
+
+	items, err := h.client.GetMarketSummary(market)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market summary for %s: %v", market, err)), nil
+	}
+
+	return mcp.NewToolResultText(formatMarketSummary(market, items)), nil
+}
+
+// HandleGetMarketStatus handles the get_market_status tool call.
+func (h *Handlers) HandleGetMarketStatus(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	market := strings.ToUpper(strings.TrimSpace(req.GetString("market", "")))
+	if market == "" {
+		return mcp.NewToolResultError("market is required"), nil
+	}
+
+	groups, err := h.client.GetMarketStatus(market)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market status for %s: %v", market, err)), nil
+	}
+
+	return mcp.NewToolResultText(formatMarketStatus(market, groups)), nil
+}
+
 // --- Text formatters ---
+
+func formatBulkQuotes(results []yahoo.BulkQuoteResult) string {
+	if len(results) == 0 {
+		return "No quotes returned"
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "=== Bulk Quotes (%d symbols) ===\n\n", len(results))
+	fmt.Fprintf(&b, "%-8s %-25s %10s %10s %8s %14s %12s\n",
+		"Symbol", "Name", "Price", "Change", "Chg%", "Volume", "Mkt Cap")
+	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 95))
+
+	for _, q := range results {
+		name := q.LongName
+		if name == "" {
+			name = q.ShortName
+		}
+		if len(name) > 24 {
+			name = name[:22] + ".."
+		}
+
+		changeSign := "+"
+		if q.RegularMarketChange < 0 {
+			changeSign = ""
+		}
+
+		fmt.Fprintf(&b, "%-8s %-25s %10.2f %s%9.2f %s%6.2f%% %14s %12s\n",
+			q.Symbol,
+			name,
+			q.RegularMarketPrice,
+			changeSign, q.RegularMarketChange,
+			changeSign, q.RegularMarketChangePercent,
+			fmtInt(q.RegularMarketVolume),
+			fmtLargeNumber(float64(q.MarketCap)),
+		)
+	}
+
+	return b.String()
+}
+
+func formatBulkSpark(symbolOrder []string, results yahoo.SparkResponse) string {
+	if len(results) == 0 {
+		return "No spark data returned"
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "=== Bulk Price History (%d symbols) ===\n", len(results))
+
+	for _, sym := range symbolOrder {
+		sr, ok := results[sym]
+		if !ok {
+			fmt.Fprintf(&b, "\n--- %s: no data ---\n", sym)
+			continue
+		}
+
+		granularity := fmt.Sprintf("%ds", sr.DataGranularity)
+		if sr.DataGranularity >= 86400 {
+			granularity = fmt.Sprintf("%dd", sr.DataGranularity/86400)
+		} else if sr.DataGranularity >= 3600 {
+			granularity = fmt.Sprintf("%dh", sr.DataGranularity/3600)
+		} else if sr.DataGranularity >= 60 {
+			granularity = fmt.Sprintf("%dm", sr.DataGranularity/60)
+		}
+		fmt.Fprintf(&b, "\n--- %s (interval: %s) ---\n", sr.Symbol, granularity)
+		if sr.ChartPreviousClose > 0 {
+			fmt.Fprintf(&b, "Previous Close: %.2f\n", sr.ChartPreviousClose)
+		}
+
+		n := len(sr.Timestamps)
+		if n == 0 {
+			fmt.Fprintf(&b, "No data points\n")
+			continue
+		}
+
+		// Cap at 50 rows per symbol to keep output manageable
+		step := 1
+		if n > 50 {
+			step = n / 50
+		}
+
+		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date", "Close", "Change%")
+		for i := 0; i < n; i += step {
+			ts := time.Unix(sr.Timestamps[i], 0)
+			close := sr.Close[i]
+			chgPct := 0.0
+			if sr.ChartPreviousClose > 0 {
+				chgPct = (close - sr.ChartPreviousClose) / sr.ChartPreviousClose * 100
+			}
+			sign := "+"
+			if chgPct < 0 {
+				sign = ""
+			}
+			fmt.Fprintf(&b, "%-20s %10.2f %s%8.2f%%\n", ts.Format("2006-01-02 15:04"), close, sign, chgPct)
+		}
+		fmt.Fprintf(&b, "(%d of %d data points)\n", min(n, 50), n)
+	}
+
+	return b.String()
+}
 
 func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string {
 	if price == nil {
@@ -523,6 +737,216 @@ func formatProfile(symbol string, profile *yahoo.AssetProfileData, quoteType *ya
 		}
 		if len(profile.CompanyOfficers) > 5 {
 			fmt.Fprintf(&b, "  ... and %d more\n", len(profile.CompanyOfficers)-5)
+		}
+	}
+
+	return b.String()
+}
+
+func formatSector(data *yahoo.SectorData) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "=== Sector: %s ===\n", data.Name)
+	if data.Symbol != "" {
+		fmt.Fprintf(&b, "Symbol: %s\n", data.Symbol)
+	}
+
+	ov := data.Overview
+	fmt.Fprintf(&b, "\n--- Overview ---\n")
+	if ov.Description != "" {
+		fmt.Fprintf(&b, "%s\n\n", ov.Description)
+	}
+	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
+	fmt.Fprintf(&b, "Industries:   %d\n", ov.IndustriesCount)
+	if ov.MarketCap.Raw > 0 {
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+	}
+	if ov.MarketWeight.Raw > 0 {
+		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
+	}
+	if ov.EmployeeCount.Raw > 0 {
+		fmt.Fprintf(&b, "Employees:    %s\n", fmtInt(int64(ov.EmployeeCount.Raw)))
+	}
+
+	if len(data.TopCompanies) > 0 {
+		fmt.Fprintf(&b, "\n--- Top Companies ---\n")
+		for i, c := range data.TopCompanies {
+			if i >= 10 {
+				fmt.Fprintf(&b, "... and %d more\n", len(data.TopCompanies)-10)
+				break
+			}
+			weight := ""
+			if c.MarketWeight.Raw > 0 {
+				weight = fmt.Sprintf(" (%.2f%%)", c.MarketWeight.Raw*100)
+			}
+			fmt.Fprintf(&b, "  %-8s %s%s\n", c.Symbol, c.Name, weight)
+		}
+	}
+
+	if len(data.Industries) > 0 {
+		fmt.Fprintf(&b, "\n--- Industries ---\n")
+		for _, ind := range data.Industries {
+			weight := ""
+			if ind.MarketWeight.Raw > 0 {
+				weight = fmt.Sprintf(" (%.2f%%)", ind.MarketWeight.Raw*100)
+			}
+			fmt.Fprintf(&b, "  %-35s key: %s%s\n", ind.Name, ind.Key, weight)
+		}
+	}
+
+	if len(data.TopETFs) > 0 {
+		fmt.Fprintf(&b, "\n--- Top ETFs ---\n")
+		for _, f := range data.TopETFs {
+			fmt.Fprintf(&b, "  %-8s %s\n", f.Symbol, f.Name)
+		}
+	}
+
+	if len(data.TopMutualFunds) > 0 {
+		fmt.Fprintf(&b, "\n--- Top Mutual Funds ---\n")
+		for _, f := range data.TopMutualFunds {
+			fmt.Fprintf(&b, "  %-8s %s\n", f.Symbol, f.Name)
+		}
+	}
+
+	return b.String()
+}
+
+func formatIndustry(data *yahoo.IndustryData) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "=== Industry: %s ===\n", data.Name)
+	fmt.Fprintf(&b, "Sector: %s (%s)\n", data.SectorName, data.SectorKey)
+	if data.Symbol != "" {
+		fmt.Fprintf(&b, "Symbol: %s\n", data.Symbol)
+	}
+
+	ov := data.Overview
+	fmt.Fprintf(&b, "\n--- Overview ---\n")
+	if ov.Description != "" {
+		fmt.Fprintf(&b, "%s\n\n", ov.Description)
+	}
+	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
+	if ov.MarketCap.Raw > 0 {
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+	}
+	if ov.MarketWeight.Raw > 0 {
+		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
+	}
+	if ov.EmployeeCount.Raw > 0 {
+		fmt.Fprintf(&b, "Employees:    %s\n", fmtInt(int64(ov.EmployeeCount.Raw)))
+	}
+
+	if len(data.TopCompanies) > 0 {
+		fmt.Fprintf(&b, "\n--- Top Companies ---\n")
+		for i, c := range data.TopCompanies {
+			if i >= 10 {
+				fmt.Fprintf(&b, "... and %d more\n", len(data.TopCompanies)-10)
+				break
+			}
+			weight := ""
+			if c.MarketWeight.Raw > 0 {
+				weight = fmt.Sprintf(" (%.2f%%)", c.MarketWeight.Raw*100)
+			}
+			fmt.Fprintf(&b, "  %-8s %s%s\n", c.Symbol, c.Name, weight)
+		}
+	}
+
+	if len(data.TopPerformingCompanies) > 0 {
+		fmt.Fprintf(&b, "\n--- Top Performing Companies ---\n")
+		fmt.Fprintf(&b, "  %-8s %-25s %10s %10s %12s\n", "Symbol", "Name", "YTD Ret", "Last", "Target")
+		for i, c := range data.TopPerformingCompanies {
+			if i >= 10 {
+				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopPerformingCompanies)-10)
+				break
+			}
+			name := c.Name
+			if len(name) > 24 {
+				name = name[:22] + ".."
+			}
+			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %10.2f %12.2f\n",
+				c.Symbol, name, c.YtdReturn.Raw*100, c.LastPrice.Raw, c.TargetPrice.Raw)
+		}
+	}
+
+	if len(data.TopGrowthCompanies) > 0 {
+		fmt.Fprintf(&b, "\n--- Top Growth Companies ---\n")
+		fmt.Fprintf(&b, "  %-8s %-25s %10s %12s\n", "Symbol", "Name", "YTD Ret", "Growth Est")
+		for i, c := range data.TopGrowthCompanies {
+			if i >= 10 {
+				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopGrowthCompanies)-10)
+				break
+			}
+			name := c.Name
+			if len(name) > 24 {
+				name = name[:22] + ".."
+			}
+			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %11.1f%%\n",
+				c.Symbol, name, c.YtdReturn.Raw*100, c.GrowthEstimate.Raw*100)
+		}
+	}
+
+	return b.String()
+}
+
+func formatMarketSummary(market string, items []yahoo.MarketSummaryItem) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "=== %s Market Summary ===\n\n", market)
+
+	if len(items) == 0 {
+		fmt.Fprintf(&b, "No market data available\n")
+		return b.String()
+	}
+
+	fmt.Fprintf(&b, "%-12s %-30s %12s %10s %8s\n", "Symbol", "Name", "Price", "Change", "Chg%")
+	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 78))
+
+	for _, item := range items {
+		name := item.ShortName
+		if len(name) > 29 {
+			name = name[:27] + ".."
+		}
+		sign := "+"
+		if item.RegularMarketChange < 0 {
+			sign = ""
+		}
+		fmt.Fprintf(&b, "%-12s %-30s %12.2f %s%9.2f %s%6.2f%%\n",
+			item.Symbol, name,
+			item.RegularMarketPrice,
+			sign, item.RegularMarketChange,
+			sign, item.RegularMarketChangePercent)
+	}
+
+	return b.String()
+}
+
+func formatMarketStatus(market string, groups []yahoo.MarketTimeGroup) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "=== %s Market Status ===\n\n", market)
+
+	if len(groups) == 0 {
+		fmt.Fprintf(&b, "No market time data available\n")
+		return b.String()
+	}
+
+	for _, group := range groups {
+		for _, mt := range group.MarketTime {
+			name := mt.Name
+			if name == "" {
+				name = mt.ID
+			}
+			fmt.Fprintf(&b, "--- %s ---\n", name)
+			fmt.Fprintf(&b, "  Status:  %s\n", mt.Status)
+			if mt.Message != "" {
+				fmt.Fprintf(&b, "  Info:    %s\n", mt.Message)
+			}
+			fmt.Fprintf(&b, "  Open:    %s\n", mt.Open)
+			fmt.Fprintf(&b, "  Close:   %s\n", mt.Close)
+			if len(mt.Timezone) > 0 {
+				fmt.Fprintf(&b, "  Timezone: %s\n", mt.Timezone[0].Short)
+			}
+			fmt.Fprintln(&b)
 		}
 	}
 

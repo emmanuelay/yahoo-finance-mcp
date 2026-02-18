@@ -26,6 +26,12 @@ func main() {
 	s.AddTool(tools.GetRecommendationsTool(), handlers.HandleGetRecommendations)
 	s.AddTool(tools.GetNewsTool(), handlers.HandleGetNews)
 	s.AddTool(tools.GetProfileTool(), handlers.HandleGetProfile)
+	s.AddTool(tools.GetBulkQuotesTool(), handlers.HandleGetBulkQuotes)
+	s.AddTool(tools.GetBulkSparkTool(), handlers.HandleGetBulkSpark)
+	s.AddTool(tools.GetSectorTool(), handlers.HandleGetSector)
+	s.AddTool(tools.GetIndustryTool(), handlers.HandleGetIndustry)
+	s.AddTool(tools.GetMarketSummaryTool(), handlers.HandleGetMarketSummary)
+	s.AddTool(tools.GetMarketStatusTool(), handlers.HandleGetMarketStatus)
 
 	if err := server.ServeStdio(s); err != nil {
 		log.Fatalf("Server error: %v", err)
