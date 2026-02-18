@@ -2,6 +2,19 @@
 
 An MCP (Model Context Protocol) server that provides access to Yahoo Finance data. Built with [mcp-go](https://github.com/mark3labs/mcp-go).
 
+## Example prompts
+
+- "What's the current price of Apple stock?"
+- "Compare the performance of AAPL, MSFT, and GOOGL over the past 6 months"
+- "Show me Tesla's income statement for the last 4 quarters"
+- "What are analysts recommending for NVIDIA right now?"
+- "Find me the top companies in the semiconductor industry"
+- "What options are available for AMZN expiring this month?"
+- "Give me a summary of the US market today"
+- "What's the latest news about Microsoft?"
+- "Tell me about AMD - what do they do, what sector are they in?"
+- "Is the European market open right now?"
+
 ## Tools
 
 | Tool | Description |
@@ -64,6 +77,7 @@ Restart Claude Desktop after saving the configuration.
 ```sh
 claude mcp add yahoo-finance -- yahoo-finance-mcp
 ```
+
 
 ## Development
 
