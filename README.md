@@ -59,6 +59,12 @@ The config file is located at:
 
 Restart Claude Desktop after saving the configuration.
 
+### Claude Code
+
+```sh
+claude mcp add yahoo-finance -- yahoo-finance-mcp
+```
+
 ## Development
 
 ```sh
