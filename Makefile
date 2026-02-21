@@ -1,4 +1,4 @@
-.PHONY: build clean test test-integration install help
+.PHONY: build clean test test-integration install help scan lint
 
 # Binary name
 BINARY_NAME=yahoo-finance-mcp
@@ -56,5 +56,13 @@ deps: ## Download dependencies
 	@go mod download
 	@go mod tidy
 	@echo "Dependencies updated"
+
+scan: ## Run security scan with govulncheck
+	@echo "Running vulnerability scan..."
+	@govulncheck ./...
+
+lint: ## Run static analysis with staticcheck
+	@echo "Running static analysis..."
+	@staticcheck ./...
 
 all: clean deps build test ## Clean, download deps, build, and test
