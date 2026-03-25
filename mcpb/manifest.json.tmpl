@@ -1,0 +1,117 @@
+{
+  "manifest_version": "0.4",
+  "name": "yahoo-finance-mcp",
+  "display_name": "Yahoo Finance MCP",
+  "description": "MCP server for Yahoo Finance — provides access to stock quotes, charts, financials, options, news, and market data.",
+  "long_description": "This MCP server fetches data from Yahoo Finance via their public API. The server does not read or write any files on your computer and does not run any commands — it only makes outgoing HTTPS requests to Yahoo Finance.",
+  "version": "%%VERSION%%",
+  "author": {
+    "name": "Emmanuel Ay",
+    "url": "https://github.com/emmanuelay"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emmanuelay/yahoo-finance-mcp"
+  },
+  "homepage": "https://github.com/emmanuelay/yahoo-finance-mcp",
+  "license": "MIT",
+  "server": {
+    "type": "binary",
+    "entry_point": "yahoo-finance-mcp",
+    "mcp_config": {
+      "command": "${__dirname}/yahoo-finance-mcp",
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}/yahoo-finance-mcp.exe"
+        }
+      }
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"]
+  },
+  "tools": [
+    {
+      "name": "get_quote",
+      "description": "Get a real-time stock quote including price, change, volume, and key metrics."
+    },
+    {
+      "name": "get_chart",
+      "description": "Get historical price chart data for a symbol with configurable time range and interval."
+    },
+    {
+      "name": "search",
+      "description": "Search for stocks, ETFs, and other securities by name or ticker symbol."
+    },
+    {
+      "name": "get_financials",
+      "description": "Get financial statements (income statement, balance sheet, cash flow) for a company."
+    },
+    {
+      "name": "get_options",
+      "description": "Get options chain data (calls and puts) for a symbol."
+    },
+    {
+      "name": "get_recommendations",
+      "description": "Get analyst recommendations and similar stock suggestions for a symbol."
+    },
+    {
+      "name": "get_news",
+      "description": "Get latest news articles related to a stock or topic."
+    },
+    {
+      "name": "get_profile",
+      "description": "Get company profile information including description, sector, industry, and key stats."
+    },
+    {
+      "name": "get_bulk_quotes",
+      "description": "Get real-time quotes for multiple symbols in a single request."
+    },
+    {
+      "name": "get_bulk_spark",
+      "description": "Get spark chart data (mini charts) for multiple symbols."
+    },
+    {
+      "name": "get_sector",
+      "description": "Get performance data for a market sector."
+    },
+    {
+      "name": "get_industry",
+      "description": "Get performance data for a specific industry."
+    },
+    {
+      "name": "get_market_summary",
+      "description": "Get an overview of major market indices and their current performance."
+    },
+    {
+      "name": "get_market_status",
+      "description": "Get current market status (open/closed) for major exchanges."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "analyze_stock",
+      "description": "Analyze a stock using Yahoo Finance data",
+      "arguments": ["ticker"],
+      "text": "Search for the stock with ticker ${arguments.ticker}, then get the latest quote, financials, profile, and analyst recommendations. Provide a concise financial overview."
+    },
+    {
+      "name": "compare_stocks",
+      "description": "Compare two stocks side by side",
+      "arguments": ["ticker1", "ticker2"],
+      "text": "Get quotes, financials, and profiles for ${arguments.ticker1} and ${arguments.ticker2}. Compare them side by side and highlight key differences."
+    },
+    {
+      "name": "market_overview",
+      "description": "Get a broad market overview",
+      "arguments": [],
+      "text": "Get the market summary and market status. Provide an overview of how major indices are performing and whether markets are currently open."
+    },
+    {
+      "name": "options_analysis",
+      "description": "Analyze options chain for a stock",
+      "arguments": ["ticker"],
+      "text": "Get the options chain for ${arguments.ticker} along with the current quote. Summarize key options data including notable call and put activity."
+    }
+  ]
+}

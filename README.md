@@ -46,7 +46,12 @@ Heavily inspired by [Ran Aroussis](https://github.com/ranaroussi) python project
 | `get_market_summary` | Market summary with index prices and changes |
 | `get_market_status` | Market open/close times and timezone information |
 
-## Install binary
+## Install
+
+### Desktop Extension (.mcpb) for Claude Desktop
+
+The easiest way to install is to download the `.mcpb` file for your platform from the [latest release](https://github.com/emmanuelay/yahoo-finance-mcp/releases/latest).
+On Mac you can double-click the file to start the installation process in Claude Desktop.
 
 ### Homebrew
 
@@ -101,6 +106,8 @@ make deps       # Download dependencies
 make build      # Build the binary
 make test       # Run tests
 make install    # Install to $GOPATH/bin
+make tags       # List all git tags
+make mcpb       # Build .mcpb bundles from goreleaser dist/
 ```
 
 ## License

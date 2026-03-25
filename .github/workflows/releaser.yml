@@ -13,20 +13,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version: stable
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Build mcpb bundles
+        run: ./scripts/build-mcpb.sh ${GITHUB_REF_NAME#v}
+
+      - name: Upload mcpb bundles to release
+        run: |
+          for f in dist/*.mcpb; do
+            name=$(basename "$f" .mcpb)
+            label=$(echo "$name" | sed \
+              -e "s/^yahoo-finance-mcp_[^_]*/Yahoo Finance MCP/" \
+              -e "s/_darwin_amd64/ (macOS Intel)/" \
+              -e "s/_darwin_arm64/ (macOS Apple Silicon)/" \
+              -e "s/_linux_amd64/ (Linux x64)/" \
+              -e "s/_linux_arm64/ (Linux ARM64)/" \
+              -e "s/_win32_amd64/ (Windows x64)/" \
+              -e "s/_win32_arm64/ (Windows ARM64)/")
+            gh release upload "$GITHUB_REF_NAME" "$f#${label}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
