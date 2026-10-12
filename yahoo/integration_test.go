@@ -36,6 +36,16 @@ func TestIntegration_GetQuote(t *testing.T) {
 	if detail.FiftyTwoWeekHigh.Raw <= 0 {
 		t.Errorf("detail.FiftyTwoWeekHigh.Raw = %v, want > 0", detail.FiftyTwoWeekHigh.Raw)
 	}
+
+	// quoteSummary reports percent change as a fraction; the formatter relies on
+	// this, so pin the convention against live data.
+	if prev := price.RegularMarketPreviousClose.Raw; prev > 0 {
+		want := price.RegularMarketChange.Raw / prev
+		got := price.RegularMarketChangePercent.Raw
+		if diff := got - want; diff > 0.0005 || diff < -0.0005 {
+			t.Errorf("RegularMarketChangePercent.Raw = %v, want fraction ~%v (change %v / prev %v)", got, want, price.RegularMarketChange.Raw, prev)
+		}
+	}
 }
 
 func TestIntegration_GetChart(t *testing.T) {

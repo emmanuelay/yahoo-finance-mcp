@@ -273,12 +273,12 @@ func TestFormatQuote_EdgeCases(t *testing.T) {
 
 	pre := &yahoo.PriceData{Symbol: "X", ShortName: "Short", Currency: "EUR", MarketState: "PRE",
 		RegularMarketPrice: yahoo.YahooValue{Raw: 10}, PreMarketPrice: yahoo.YahooValue{Raw: 10.5},
-		PreMarketChange: yahoo.YahooValue{Raw: 0.5}, PreMarketChangePercent: yahoo.YahooValue{Raw: 5}}
+		PreMarketChange: yahoo.YahooValue{Raw: 0.5}, PreMarketChangePercent: yahoo.YahooValue{Raw: 0.05}}
 	out := formatQuote(pre, nil)
 	if !strings.Contains(out, "=== X (Short) ===") {
 		t.Errorf("should fall back to ShortName, got:\n%s", out)
 	}
-	if !strings.Contains(out, "--- Pre-Market ---") || !strings.Contains(out, "€10.50") {
+	if !strings.Contains(out, "--- Pre-Market ---") || !strings.Contains(out, "€10.50 (+0.50, +5.00%)") {
 		t.Errorf("expected pre-market block in EUR, got:\n%s", out)
 	}
 	if strings.Contains(out, "Market Cap") || strings.Contains(out, "P/E") {
