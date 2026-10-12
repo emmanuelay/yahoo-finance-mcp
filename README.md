@@ -48,17 +48,35 @@ Heavily inspired by [Ran Aroussis](https://github.com/ranaroussi) python project
 
 ## Install
 
-### Desktop Extension (.mcpb) for Claude Desktop
+### Desktop Extension (.mcpb) for Claude Desktop (recommended)
 
-The easiest way to install is to download the `.mcpb` file for your platform from the [latest release](https://github.com/emmanuelay/yahoo-finance-mcp/releases/latest).
-On Mac you can double-click the file to start the installation process in Claude Desktop.
+Download the **`.mcpb`** file for your platform from the [latest release](https://github.com/emmanuelay/yahoo-finance-mcp/releases/latest):
 
-### Homebrew
+| Platform | File |
+|----------|------|
+| macOS (Apple Silicon) | `yahoo-finance-mcp_<version>_darwin_arm64.mcpb` |
+| macOS (Intel) | `yahoo-finance-mcp_<version>_darwin_amd64.mcpb` |
+| Windows (x64) | `yahoo-finance-mcp_<version>_win32_amd64.mcpb` |
+| Windows (ARM64) | `yahoo-finance-mcp_<version>_win32_arm64.mcpb` |
+| Linux (x64 / ARM64) | `yahoo-finance-mcp_<version>_linux_<arch>.mcpb` |
+
+Then open Claude Desktop, go to **Settings → Extensions**, and install the file. On macOS you can also double-click the `.mcpb` file.
+
+> [!NOTE]
+> The `.zip` and `.tar.gz` files on the release page are plain binary archives for Homebrew and manual installs. They are **not** extensions. Dropping one into Claude Desktop's *Upload local plugin* dialog fails with `Invalid plugin: missing .claude-plugin/plugin.json`, because that dialog is for Claude plugins rather than MCP extensions. Use the `.mcpb` file instead.
+
+### Homebrew (macOS / Linux)
 
 ```sh
 brew tap emmanuelay/tap
 brew install yahoo-finance-mcp
 ```
+
+This puts `yahoo-finance-mcp` on your `PATH`, so the config examples below work as written.
+
+### Pre-built binary (manual)
+
+Download the `.zip` (Windows) or `.tar.gz` (macOS / Linux) archive for your platform from the [latest release](https://github.com/emmanuelay/yahoo-finance-mcp/releases/latest) and extract it. The archive contains a single binary, `yahoo-finance-mcp` (`yahoo-finance-mcp.exe` on Windows). Either put it somewhere on your `PATH`, or reference it by its full path in the config examples below.
 
 ### From source
 
@@ -133,7 +151,9 @@ The module is at v0, so the API may change between releases.
 
 ### Claude Desktop
 
-Add the server to your `claude_desktop_config.json`:
+If you installed the `.mcpb` extension you are done; skip this section.
+
+Otherwise add the server to your `claude_desktop_config.json`. If the binary is on your `PATH` (Homebrew), the bare name is enough:
 
 ```json
 {
@@ -145,12 +165,37 @@ Add the server to your `claude_desktop_config.json`:
 }
 ```
 
+If you downloaded the binary manually, use its full path. On Windows, double the backslashes:
+
+```json
+{
+  "mcpServers": {
+    "yahoo-finance": {
+      "command": "C:\\Users\\you\\Tools\\yahoo-finance-mcp\\yahoo-finance-mcp.exe"
+    }
+  }
+}
+```
+
+```json
+{
+  "mcpServers": {
+    "yahoo-finance": {
+      "command": "/Users/you/Tools/yahoo-finance-mcp/yahoo-finance-mcp"
+    }
+  }
+}
+```
+
 The config file is located at:
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 Restart Claude Desktop after saving the configuration.
+
+> [!TIP]
+> `MCP yahoo-finance: spawn yahoo-finance-mcp ENOENT` means Claude Desktop could not find the binary. Either it is not on your `PATH`, or the path in the config is wrong. Using the full path to the binary fixes it.
 
 ### Claude Code
 
