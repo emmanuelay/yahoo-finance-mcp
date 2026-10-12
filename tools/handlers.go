@@ -376,11 +376,8 @@ func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string
 	fmt.Fprintf(&b, "Exchange: %s | Currency: %s | Market: %s\n\n", price.ExchangeName, price.Currency, price.MarketState)
 
 	fmt.Fprintf(&b, "Price:           %s\n", fmtPrice(price.RegularMarketPrice.Raw, price.Currency))
-	changeSign := "+"
-	if price.RegularMarketChange.Raw < 0 {
-		changeSign = ""
-	}
-	fmt.Fprintf(&b, "Change:          %s%.2f (%s%.2f%%)\n", changeSign, price.RegularMarketChange.Raw, changeSign, price.RegularMarketChangePercent.Raw)
+	// quoteSummary reports percent changes as fractions (0.0141 == 1.41%).
+	fmt.Fprintf(&b, "Change:          %s (%s%%)\n", fmtSigned(price.RegularMarketChange.Raw), fmtSigned(price.RegularMarketChangePercent.Raw*100))
 	fmt.Fprintf(&b, "Volume:          %s\n", fmtInt(price.RegularMarketVolume.Raw))
 
 	if price.MarketCap.Raw > 0 {
@@ -421,11 +418,11 @@ func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string
 	// Pre/Post market info
 	if price.MarketState == "PRE" && price.PreMarketPrice.Raw > 0 {
 		fmt.Fprintf(&b, "\n--- Pre-Market ---\n")
-		fmt.Fprintf(&b, "Price:  %s (%.2f, %.2f%%)\n", fmtPrice(price.PreMarketPrice.Raw, price.Currency), price.PreMarketChange.Raw, price.PreMarketChangePercent.Raw)
+		fmt.Fprintf(&b, "Price:  %s (%s, %s%%)\n", fmtPrice(price.PreMarketPrice.Raw, price.Currency), fmtSigned(price.PreMarketChange.Raw), fmtSigned(price.PreMarketChangePercent.Raw*100))
 	}
 	if price.MarketState == "POST" && price.PostMarketPrice.Raw > 0 {
 		fmt.Fprintf(&b, "\n--- Post-Market ---\n")
-		fmt.Fprintf(&b, "Price:  %s (%.2f, %.2f%%)\n", fmtPrice(price.PostMarketPrice.Raw, price.Currency), price.PostMarketChange.Raw, price.PostMarketChangePercent.Raw)
+		fmt.Fprintf(&b, "Price:  %s (%s, %s%%)\n", fmtPrice(price.PostMarketPrice.Raw, price.Currency), fmtSigned(price.PostMarketChange.Raw), fmtSigned(price.PostMarketChangePercent.Raw*100))
 	}
 
 	return b.String()

@@ -189,3 +189,112 @@ func TestIntegration_GetRecommendations(t *testing.T) {
 		t.Error("expected at least one analyst recommendation in current period")
 	}
 }
+
+func TestIntegration_GetBulkQuotes(t *testing.T) {
+	results, err := integrationClient.GetBulkQuotes(context.Background(), []string{"AAPL", "MSFT", "VOLV-B.ST"})
+	if err != nil {
+		t.Fatalf("GetBulkQuotes() error: %v", err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("got %d results, want 3", len(results))
+	}
+	for _, r := range results {
+		if r.RegularMarketPrice <= 0 {
+			t.Errorf("%s: RegularMarketPrice = %v, want > 0", r.Symbol, r.RegularMarketPrice)
+		}
+		if r.Currency == "" {
+			t.Errorf("%s: Currency is empty", r.Symbol)
+		}
+	}
+}
+
+func TestIntegration_GetBulkSpark(t *testing.T) {
+	resp, err := integrationClient.GetBulkSpark(context.Background(), []string{"AAPL", "MSFT"}, "5d", "1d")
+	if err != nil {
+		t.Fatalf("GetBulkSpark() error: %v", err)
+	}
+	for _, sym := range []string{"AAPL", "MSFT"} {
+		sr, ok := resp[sym]
+		if !ok {
+			t.Errorf("missing %s in spark response", sym)
+			continue
+		}
+		if len(sr.Timestamps) == 0 {
+			t.Errorf("%s: no timestamps", sym)
+		}
+		if len(sr.Close) != len(sr.Timestamps) {
+			t.Errorf("%s: close length %d != timestamp length %d", sym, len(sr.Close), len(sr.Timestamps))
+		}
+	}
+}
+
+func TestIntegration_GetSector(t *testing.T) {
+	data, err := integrationClient.GetSector(context.Background(), "technology")
+	if err != nil {
+		t.Fatalf("GetSector() error: %v", err)
+	}
+	if data.Name == "" {
+		t.Error("sector Name is empty")
+	}
+	if len(data.Industries) == 0 {
+		t.Error("expected at least one industry")
+	}
+	if len(data.TopCompanies) == 0 {
+		t.Error("expected at least one top company")
+	}
+}
+
+func TestIntegration_GetIndustry(t *testing.T) {
+	data, err := integrationClient.GetIndustry(context.Background(), "consumer-electronics")
+	if err != nil {
+		t.Fatalf("GetIndustry() error: %v", err)
+	}
+	if data.Name == "" {
+		t.Error("industry Name is empty")
+	}
+	if data.SectorKey != "technology" {
+		t.Errorf("SectorKey = %q, want technology", data.SectorKey)
+	}
+	if len(data.TopCompanies) == 0 {
+		t.Error("expected at least one top company")
+	}
+}
+
+func TestIntegration_GetMarketSummary(t *testing.T) {
+	items, err := integrationClient.GetMarketSummary(context.Background(), "US")
+	if err != nil {
+		t.Fatalf("GetMarketSummary() error: %v", err)
+	}
+	if len(items) == 0 {
+		t.Fatal("expected at least one index")
+	}
+	found := false
+	for _, it := range items {
+		if it.Symbol == "^GSPC" {
+			found = true
+			if it.RegularMarketPrice <= 0 {
+				t.Errorf("^GSPC price = %v, want > 0", it.RegularMarketPrice)
+			}
+		}
+	}
+	if !found {
+		t.Error("expected ^GSPC in US market summary")
+	}
+}
+
+func TestIntegration_GetMarketStatus(t *testing.T) {
+	groups, err := integrationClient.GetMarketStatus(context.Background(), "US")
+	if err != nil {
+		t.Fatalf("GetMarketStatus() error: %v", err)
+	}
+	if len(groups) == 0 || len(groups[0].MarketTime) == 0 {
+		t.Fatal("expected at least one market time entry")
+	}
+	mt := groups[0].MarketTime[0]
+	if mt.Status == "" {
+		t.Error("market Status is empty")
+	}
+	if mt.Open == "" || mt.Close == "" {
+		t.Errorf("Open/Close empty: %q / %q", mt.Open, mt.Close)
+	}
+}

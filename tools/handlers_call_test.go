@@ -106,7 +106,7 @@ func wantToolError(t *testing.T, res *mcp.CallToolResult, err error, substr stri
 
 const quoteSummaryJSON = `{"quoteSummary":{"result":[{
 	"price":{"symbol":"AAPL","longName":"Apple Inc.","currency":"USD","exchangeName":"NasdaqGS","marketState":"REGULAR",
-		"regularMarketPrice":{"raw":178.72},"regularMarketChange":{"raw":-1.28},"regularMarketChangePercent":{"raw":-0.71},
+		"regularMarketPrice":{"raw":178.72},"regularMarketChange":{"raw":-1.28},"regularMarketChangePercent":{"raw":-0.0071},
 		"regularMarketVolume":{"raw":54000000},"marketCap":{"raw":2800000000000},
 		"regularMarketOpen":{"raw":179.5},"regularMarketDayHigh":{"raw":180.1},"regularMarketDayLow":{"raw":177.9},"regularMarketPreviousClose":{"raw":180.0}},
 	"summaryDetail":{"trailingPE":{"raw":29.5},"forwardPE":{"raw":27.1},"fiftyTwoWeekLow":{"raw":124.17},"fiftyTwoWeekHigh":{"raw":199.62},
