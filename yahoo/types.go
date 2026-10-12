@@ -100,6 +100,10 @@ type ChartMeta struct {
 	DataGranularity    string   `json:"dataGranularity"`
 	Range              string   `json:"range"`
 	ValidRanges        []string `json:"validRanges"`
+	// Exchange timezone, e.g. "America/New_York" / "EST" / -18000.
+	ExchangeTimezoneName string `json:"exchangeTimezoneName"`
+	Timezone             string `json:"timezone"`
+	GMTOffset            int    `json:"gmtoffset"`
 }
 
 type ChartIndicators struct {

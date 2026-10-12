@@ -22,7 +22,10 @@ func TestGetChart_Success(t *testing.T) {
 						"regularMarketPrice": 178.72,
 						"previousClose": 176.57,
 						"dataGranularity": "1d",
-						"range": "1mo"
+						"range": "1mo",
+						"exchangeTimezoneName": "America/New_York",
+						"timezone": "EST",
+						"gmtoffset": -18000
 					},
 					"timestamp": [1700000000, 1700086400, 1700172800],
 					"indicators": {
@@ -49,6 +52,9 @@ func TestGetChart_Success(t *testing.T) {
 
 	if result.Meta.Symbol != "AAPL" {
 		t.Errorf("meta.Symbol = %q, want %q", result.Meta.Symbol, "AAPL")
+	}
+	if result.Meta.ExchangeTimezoneName != "America/New_York" || result.Meta.GMTOffset != -18000 {
+		t.Errorf("timezone = %q/%d, want America/New_York/-18000", result.Meta.ExchangeTimezoneName, result.Meta.GMTOffset)
 	}
 	if result.Meta.Currency != "USD" {
 		t.Errorf("meta.Currency = %q, want %q", result.Meta.Currency, "USD")

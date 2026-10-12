@@ -349,9 +349,9 @@ func formatBulkSpark(symbolOrder []string, results yahoo.SparkResponse) string {
 			step = n / 50
 		}
 
-		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date", "Close", "Change%")
+		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date (UTC)", "Close", "Change%")
 		for i := 0; i < n; i += step {
-			ts := time.Unix(sr.Timestamps[i], 0)
+			ts := time.Unix(sr.Timestamps[i], 0).UTC()
 			closeStr := fmtOptFloat(sr.Close, i)
 			chgStr := "N/A"
 			if i < len(sr.Close) && sr.Close[i] != nil && sr.ChartPreviousClose > 0 {
@@ -444,7 +444,9 @@ func formatChart(chart *yahoo.ChartResult) string {
 
 	fmt.Fprintf(&b, "=== %s Chart Data ===\n", chart.Meta.Symbol)
 	fmt.Fprintf(&b, "Exchange: %s | Currency: %s\n", chart.Meta.ExchangeName, chart.Meta.Currency)
-	fmt.Fprintf(&b, "Range: %s | Interval: %s\n\n", chart.Meta.Range, chart.Meta.DataGranularity)
+	fmt.Fprintf(&b, "Range: %s | Interval: %s\n", chart.Meta.Range, chart.Meta.DataGranularity)
+	loc := chartLocation(chart.Meta)
+	fmt.Fprintf(&b, "Timezone: %s\n\n", loc)
 
 	if len(chart.Timestamps) == 0 || len(chart.Indicators.Quote) == 0 {
 		fmt.Fprintf(&b, "No data points available\n")
@@ -464,7 +466,7 @@ func formatChart(chart *yahoo.ChartResult) string {
 	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 82))
 
 	for i := 0; i < total; i += step {
-		ts := time.Unix(chart.Timestamps[i], 0)
+		ts := time.Unix(chart.Timestamps[i], 0).In(loc)
 		dateStr := ts.Format("2006-01-02 15:04")
 
 		open := fmtOptFloat(q.Open, i)
@@ -558,7 +560,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 			if i > 0 {
 				fmt.Fprintf(&b, ", ")
 			}
-			fmt.Fprintf(&b, "%s", time.Unix(d, 0).Format("2006-01-02"))
+			fmt.Fprintf(&b, "%s", time.Unix(d, 0).UTC().Format("2006-01-02"))
 		}
 		fmt.Fprintln(&b)
 	}
@@ -569,7 +571,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 	}
 
 	chain := result.Options[0]
-	expDate := time.Unix(chain.ExpirationDate, 0).Format("2006-01-02")
+	expDate := time.Unix(chain.ExpirationDate, 0).UTC().Format("2006-01-02")
 
 	// Calls
 	fmt.Fprintf(&b, "\n--- CALLS (Exp: %s) ---\n", expDate)
@@ -658,9 +660,9 @@ func formatNews(symbol string, news []yahoo.SearchNews) string {
 	}
 
 	for i, n := range news {
-		pubTime := time.Unix(n.ProviderPublishTime, 0)
+		pubTime := time.Unix(n.ProviderPublishTime, 0).UTC()
 		fmt.Fprintf(&b, "%d. %s\n", i+1, n.Title)
-		fmt.Fprintf(&b, "   Publisher: %s | %s\n", n.Publisher, pubTime.Format("2006-01-02 15:04 MST"))
+		fmt.Fprintf(&b, "   Publisher: %s | %s\n", n.Publisher, pubTime.Format("2006-01-02 15:04 UTC"))
 		if n.Link != "" {
 			fmt.Fprintf(&b, "   Link: %s\n", n.Link)
 		}
@@ -955,6 +957,25 @@ func formatMarketStatus(market string, groups []yahoo.MarketTimeGroup) string {
 }
 
 // --- Formatting helpers ---
+
+// chartLocation resolves the exchange timezone from chart metadata so rows
+// print in market-local time rather than wherever the server happens to run.
+// Falls back to the fixed GMT offset, then UTC.
+func chartLocation(meta yahoo.ChartMeta) *time.Location {
+	if meta.ExchangeTimezoneName != "" {
+		if loc, err := time.LoadLocation(meta.ExchangeTimezoneName); err == nil {
+			return loc
+		}
+	}
+	if meta.Timezone != "" || meta.GMTOffset != 0 {
+		name := meta.Timezone
+		if name == "" {
+			name = fmt.Sprintf("UTC%+d", meta.GMTOffset/3600)
+		}
+		return time.FixedZone(name, meta.GMTOffset)
+	}
+	return time.UTC
+}
 
 // currencySymbol returns a display prefix for an ISO currency code.
 // Known currencies get their symbol; an empty code falls back to "$"
