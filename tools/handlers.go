@@ -302,7 +302,7 @@ func formatBulkQuotes(results []yahoo.BulkQuoteResult) string {
 			changeSign, q.RegularMarketChange,
 			changeSign, q.RegularMarketChangePercent,
 			fmtInt(q.RegularMarketVolume),
-			fmtLargeNumber(float64(q.MarketCap)),
+			fmtLargeNumber(float64(q.MarketCap), q.Currency),
 		)
 	}
 
@@ -392,7 +392,7 @@ func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string
 	fmt.Fprintf(&b, "Volume:          %s\n", fmtInt(price.RegularMarketVolume.Raw))
 
 	if price.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:      %s\n", fmtLargeNumber(float64(price.MarketCap.Raw)))
+		fmt.Fprintf(&b, "Market Cap:      %s\n", fmtLargeNumber(float64(price.MarketCap.Raw), price.Currency))
 	}
 
 	fmt.Fprintf(&b, "Open:            %s\n", fmtPrice(price.RegularMarketOpen.Raw, price.Currency))
@@ -534,7 +534,7 @@ func formatFinancials(symbol, statement string, quarterly bool, results []yahoo.
 
 		fmt.Fprintf(&b, "%s:\n", displayName)
 		for _, item := range r.Items {
-			fmt.Fprintf(&b, "  %s: %s %s\n", item.Date, fmtLargeNumber(item.ReportedValue), item.CurrencyCode)
+			fmt.Fprintf(&b, "  %s: %s\n", item.Date, fmtLargeNumber(item.ReportedValue, item.CurrencyCode))
 		}
 		fmt.Fprintln(&b)
 	}
@@ -546,7 +546,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "=== %s Options Chain ===\n", result.UnderlyingSymbol)
-	fmt.Fprintf(&b, "Underlying Price: $%.2f\n", result.Quote.RegularMarketPrice)
+	fmt.Fprintf(&b, "Underlying Price: %s\n", fmtPrice(result.Quote.RegularMarketPrice, result.Quote.Currency))
 
 	if len(result.ExpirationDates) > 0 {
 		fmt.Fprintf(&b, "Available Expirations: ")
@@ -760,7 +760,7 @@ func formatSector(data *yahoo.SectorData) string {
 	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
 	fmt.Fprintf(&b, "Industries:   %d\n", ov.IndustriesCount)
 	if ov.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw, "USD"))
 	}
 	if ov.MarketWeight.Raw > 0 {
 		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
@@ -828,7 +828,7 @@ func formatIndustry(data *yahoo.IndustryData) string {
 	}
 	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
 	if ov.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw, "USD"))
 	}
 	if ov.MarketWeight.Raw > 0 {
 		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
@@ -956,29 +956,30 @@ func formatMarketStatus(market string, groups []yahoo.MarketTimeGroup) string {
 
 // --- Formatting helpers ---
 
-func fmtPrice(val float64, currency string) string {
-	symbol := "$"
+// currencySymbol returns a display prefix for an ISO currency code.
+// Known currencies get their symbol; an empty code falls back to "$"
+// (Yahoo omits it for US-only endpoints); anything else uses the code itself.
+func currencySymbol(currency string) string {
 	switch currency {
+	case "", "USD":
+		return "$"
 	case "EUR":
-		symbol = "\u20ac"
+		return "\u20ac"
 	case "GBP", "GBp":
-		symbol = "\u00a3"
+		return "\u00a3"
 	case "JPY":
-		symbol = "\u00a5"
-	case "CHF":
-		symbol = "CHF "
-	case "SEK":
-		symbol = "SEK "
-	case "NOK":
-		symbol = "NOK "
-	case "DKK":
-		symbol = "DKK "
+		return "\u00a5"
 	case "CAD":
-		symbol = "C$"
+		return "C$"
 	case "AUD":
-		symbol = "A$"
+		return "A$"
+	default:
+		return currency + " "
 	}
-	return fmt.Sprintf("%s%.2f", symbol, val)
+}
+
+func fmtPrice(val float64, currency string) string {
+	return fmt.Sprintf("%s%.2f", currencySymbol(currency), val)
 }
 
 func fmtInt(val int64) string {
@@ -1017,25 +1018,26 @@ func fmtInt(val int64) string {
 	return result.String()
 }
 
-func fmtLargeNumber(val float64) string {
+func fmtLargeNumber(val float64, currency string) string {
 	abs := val
 	sign := ""
 	if val < 0 {
 		abs = -val
 		sign = "-"
 	}
+	sym := currencySymbol(currency)
 
 	switch {
 	case abs >= 1e12:
-		return fmt.Sprintf("%s$%.2fT", sign, abs/1e12)
+		return fmt.Sprintf("%s%s%.2fT", sign, sym, abs/1e12)
 	case abs >= 1e9:
-		return fmt.Sprintf("%s$%.2fB", sign, abs/1e9)
+		return fmt.Sprintf("%s%s%.2fB", sign, sym, abs/1e9)
 	case abs >= 1e6:
-		return fmt.Sprintf("%s$%.2fM", sign, abs/1e6)
+		return fmt.Sprintf("%s%s%.2fM", sign, sym, abs/1e6)
 	case abs >= 1e3:
-		return fmt.Sprintf("%s$%.2fK", sign, abs/1e3)
+		return fmt.Sprintf("%s%s%.2fK", sign, sym, abs/1e3)
 	default:
-		return fmt.Sprintf("%s$%.2f", sign, abs)
+		return fmt.Sprintf("%s%s%.2f", sign, sym, abs)
 	}
 }
 

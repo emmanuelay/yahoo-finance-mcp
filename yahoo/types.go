@@ -212,6 +212,7 @@ type OptionsResult struct {
 
 type OptionsQuote struct {
 	Symbol             string  `json:"symbol"`
+	Currency           string  `json:"currency"`
 	RegularMarketPrice float64 `json:"regularMarketPrice"`
 }
 
