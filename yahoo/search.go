@@ -13,11 +13,11 @@ func (c *Client) Search(query string, limit int) (*SearchResponse, error) {
 	}
 
 	params := url.Values{
-		"q":           {query},
-		"quotesCount": {strconv.Itoa(limit)},
-		"newsCount":   {"0"},
+		"q":                {query},
+		"quotesCount":      {strconv.Itoa(limit)},
+		"newsCount":        {"0"},
 		"enableFuzzyQuery": {"false"},
-		"quotesQueryId": {"tss_match_phrase_query"},
+		"quotesQueryId":    {"tss_match_phrase_query"},
 	}
 
 	var resp SearchResponse

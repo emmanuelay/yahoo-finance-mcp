@@ -34,45 +34,45 @@ type YahooLongValue struct {
 
 // PriceData from quoteSummary price module.
 type PriceData struct {
-	Symbol                     string     `json:"symbol"`
-	ShortName                  string     `json:"shortName"`
-	LongName                   string     `json:"longName"`
-	Currency                   string     `json:"currency"`
-	Exchange                   string     `json:"exchange"`
-	ExchangeName               string     `json:"exchangeName"`
-	QuoteType                  string     `json:"quoteType"`
-	MarketState                string     `json:"marketState"`
-	RegularMarketPrice         YahooValue `json:"regularMarketPrice"`
-	RegularMarketChange        YahooValue `json:"regularMarketChange"`
-	RegularMarketChangePercent YahooValue `json:"regularMarketChangePercent"`
+	Symbol                     string         `json:"symbol"`
+	ShortName                  string         `json:"shortName"`
+	LongName                   string         `json:"longName"`
+	Currency                   string         `json:"currency"`
+	Exchange                   string         `json:"exchange"`
+	ExchangeName               string         `json:"exchangeName"`
+	QuoteType                  string         `json:"quoteType"`
+	MarketState                string         `json:"marketState"`
+	RegularMarketPrice         YahooValue     `json:"regularMarketPrice"`
+	RegularMarketChange        YahooValue     `json:"regularMarketChange"`
+	RegularMarketChangePercent YahooValue     `json:"regularMarketChangePercent"`
 	RegularMarketVolume        YahooLongValue `json:"regularMarketVolume"`
-	RegularMarketOpen          YahooValue `json:"regularMarketOpen"`
-	RegularMarketDayHigh       YahooValue `json:"regularMarketDayHigh"`
-	RegularMarketDayLow        YahooValue `json:"regularMarketDayLow"`
-	RegularMarketPreviousClose YahooValue `json:"regularMarketPreviousClose"`
+	RegularMarketOpen          YahooValue     `json:"regularMarketOpen"`
+	RegularMarketDayHigh       YahooValue     `json:"regularMarketDayHigh"`
+	RegularMarketDayLow        YahooValue     `json:"regularMarketDayLow"`
+	RegularMarketPreviousClose YahooValue     `json:"regularMarketPreviousClose"`
 	MarketCap                  YahooLongValue `json:"marketCap"`
-	PreMarketPrice             YahooValue `json:"preMarketPrice"`
-	PreMarketChange            YahooValue `json:"preMarketChange"`
-	PreMarketChangePercent     YahooValue `json:"preMarketChangePercent"`
-	PostMarketPrice            YahooValue `json:"postMarketPrice"`
-	PostMarketChange           YahooValue `json:"postMarketChange"`
-	PostMarketChangePercent    YahooValue `json:"postMarketChangePercent"`
+	PreMarketPrice             YahooValue     `json:"preMarketPrice"`
+	PreMarketChange            YahooValue     `json:"preMarketChange"`
+	PreMarketChangePercent     YahooValue     `json:"preMarketChangePercent"`
+	PostMarketPrice            YahooValue     `json:"postMarketPrice"`
+	PostMarketChange           YahooValue     `json:"postMarketChange"`
+	PostMarketChangePercent    YahooValue     `json:"postMarketChangePercent"`
 }
 
 // SummaryDetailData from quoteSummary summaryDetail module.
 type SummaryDetailData struct {
-	TrailingPE       YahooValue `json:"trailingPE"`
-	ForwardPE        YahooValue `json:"forwardPE"`
-	DividendYield    YahooValue `json:"dividendYield"`
-	DividendRate     YahooValue `json:"dividendRate"`
-	ExDividendDate   YahooValue `json:"exDividendDate"`
-	FiftyTwoWeekLow  YahooValue `json:"fiftyTwoWeekLow"`
-	FiftyTwoWeekHigh YahooValue `json:"fiftyTwoWeekHigh"`
-	FiftyDayAverage  YahooValue `json:"fiftyDayAverage"`
-	TwoHundredDayAverage YahooValue `json:"twoHundredDayAverage"`
-	Beta             YahooValue `json:"beta"`
+	TrailingPE                  YahooValue `json:"trailingPE"`
+	ForwardPE                   YahooValue `json:"forwardPE"`
+	DividendYield               YahooValue `json:"dividendYield"`
+	DividendRate                YahooValue `json:"dividendRate"`
+	ExDividendDate              YahooValue `json:"exDividendDate"`
+	FiftyTwoWeekLow             YahooValue `json:"fiftyTwoWeekLow"`
+	FiftyTwoWeekHigh            YahooValue `json:"fiftyTwoWeekHigh"`
+	FiftyDayAverage             YahooValue `json:"fiftyDayAverage"`
+	TwoHundredDayAverage        YahooValue `json:"twoHundredDayAverage"`
+	Beta                        YahooValue `json:"beta"`
 	TrailingAnnualDividendYield YahooValue `json:"trailingAnnualDividendYield"`
-	PayoutRatio      YahooValue `json:"payoutRatio"`
+	PayoutRatio                 YahooValue `json:"payoutRatio"`
 }
 
 // ChartResponse from v8 chart endpoint.
@@ -90,16 +90,16 @@ type ChartResult struct {
 }
 
 type ChartMeta struct {
-	Currency             string  `json:"currency"`
-	Symbol               string  `json:"symbol"`
-	ExchangeName         string  `json:"exchangeName"`
-	InstrumentType       string  `json:"instrumentType"`
-	RegularMarketPrice   float64 `json:"regularMarketPrice"`
-	PreviousClose        float64 `json:"previousClose"`
-	ChartPreviousClose   float64 `json:"chartPreviousClose"`
-	DataGranularity      string  `json:"dataGranularity"`
-	Range                string  `json:"range"`
-	ValidRanges          []string `json:"validRanges"`
+	Currency           string   `json:"currency"`
+	Symbol             string   `json:"symbol"`
+	ExchangeName       string   `json:"exchangeName"`
+	InstrumentType     string   `json:"instrumentType"`
+	RegularMarketPrice float64  `json:"regularMarketPrice"`
+	PreviousClose      float64  `json:"previousClose"`
+	ChartPreviousClose float64  `json:"chartPreviousClose"`
+	DataGranularity    string   `json:"dataGranularity"`
+	Range              string   `json:"range"`
+	ValidRanges        []string `json:"validRanges"`
 }
 
 type ChartIndicators struct {
@@ -127,49 +127,49 @@ type SearchResponse struct {
 }
 
 type SearchQuote struct {
-	Symbol    string `json:"symbol"`
-	ShortName string `json:"shortname"`
-	LongName  string `json:"longname"`
-	Exchange  string `json:"exchange"`
-	QuoteType string `json:"quoteType"`
-	Industry  string `json:"industry"`
-	Sector    string `json:"sector"`
+	Symbol    string  `json:"symbol"`
+	ShortName string  `json:"shortname"`
+	LongName  string  `json:"longname"`
+	Exchange  string  `json:"exchange"`
+	QuoteType string  `json:"quoteType"`
+	Industry  string  `json:"industry"`
+	Sector    string  `json:"sector"`
 	Score     float64 `json:"score"`
 }
 
 type SearchNews struct {
-	UUID          string `json:"uuid"`
-	Title         string `json:"title"`
-	Publisher     string `json:"publisher"`
-	Link          string `json:"link"`
+	UUID                string `json:"uuid"`
+	Title               string `json:"title"`
+	Publisher           string `json:"publisher"`
+	Link                string `json:"link"`
 	ProviderPublishTime int64  `json:"providerPublishTime"`
 }
 
 // AssetProfileData from quoteSummary assetProfile module.
 type AssetProfileData struct {
-	Address1            string              `json:"address1"`
-	Address2            string              `json:"address2"`
-	City                string              `json:"city"`
-	State               string              `json:"state"`
-	Zip                 string              `json:"zip"`
-	Country             string              `json:"country"`
-	Phone               string              `json:"phone"`
-	Website             string              `json:"website"`
-	Industry            string              `json:"industry"`
-	IndustryKey         string              `json:"industryKey"`
-	Sector              string              `json:"sector"`
-	SectorKey           string              `json:"sectorKey"`
-	LongBusinessSummary string              `json:"longBusinessSummary"`
-	FullTimeEmployees   int                 `json:"fullTimeEmployees"`
-	CompanyOfficers     []CompanyOfficer    `json:"companyOfficers"`
+	Address1            string           `json:"address1"`
+	Address2            string           `json:"address2"`
+	City                string           `json:"city"`
+	State               string           `json:"state"`
+	Zip                 string           `json:"zip"`
+	Country             string           `json:"country"`
+	Phone               string           `json:"phone"`
+	Website             string           `json:"website"`
+	Industry            string           `json:"industry"`
+	IndustryKey         string           `json:"industryKey"`
+	Sector              string           `json:"sector"`
+	SectorKey           string           `json:"sectorKey"`
+	LongBusinessSummary string           `json:"longBusinessSummary"`
+	FullTimeEmployees   int              `json:"fullTimeEmployees"`
+	CompanyOfficers     []CompanyOfficer `json:"companyOfficers"`
 }
 
 type CompanyOfficer struct {
-	Name         string     `json:"name"`
-	Title        string     `json:"title"`
-	Age          int        `json:"age"`
-	TotalPay     YahooLongValue `json:"totalPay"`
-	YearBorn     int        `json:"yearBorn"`
+	Name     string         `json:"name"`
+	Title    string         `json:"title"`
+	Age      int            `json:"age"`
+	TotalPay YahooLongValue `json:"totalPay"`
+	YearBorn int            `json:"yearBorn"`
 }
 
 type QuoteTypeData struct {
@@ -203,11 +203,11 @@ type OptionsResponse struct {
 }
 
 type OptionsResult struct {
-	UnderlyingSymbol string          `json:"underlyingSymbol"`
-	ExpirationDates  []int64         `json:"expirationDates"`
-	Strikes          []float64       `json:"strikes"`
-	Quote            OptionsQuote    `json:"quote"`
-	Options          []OptionsChain  `json:"options"`
+	UnderlyingSymbol string         `json:"underlyingSymbol"`
+	ExpirationDates  []int64        `json:"expirationDates"`
+	Strikes          []float64      `json:"strikes"`
+	Quote            OptionsQuote   `json:"quote"`
+	Options          []OptionsChain `json:"options"`
 }
 
 type OptionsQuote struct {
@@ -216,7 +216,7 @@ type OptionsQuote struct {
 }
 
 type OptionsChain struct {
-	ExpirationDate int64          `json:"expirationDate"`
+	ExpirationDate int64            `json:"expirationDate"`
 	Calls          []OptionContract `json:"calls"`
 	Puts           []OptionContract `json:"puts"`
 }
@@ -246,9 +246,9 @@ type TimeseriesResponse struct {
 }
 
 type TimeseriesResult struct {
-	Meta       TimeseriesMeta          `json:"meta"`
-	Timestamp  []int64                 `json:"timestamp"`
-	Type       string                  // populated from the key name
+	Meta       TimeseriesMeta           `json:"meta"`
+	Timestamp  []int64                  `json:"timestamp"`
+	Type       string                   // populated from the key name
 	DataPoints []map[string]interface{} // populated from dynamic keys
 }
 

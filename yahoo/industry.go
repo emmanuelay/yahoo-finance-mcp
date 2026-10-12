@@ -11,14 +11,14 @@ type IndustryResponse struct {
 }
 
 type IndustryData struct {
-	SectorKey              string                 `json:"sectorKey"`
-	SectorName             string                 `json:"sectorName"`
-	Name                   string                 `json:"name"`
-	Symbol                 string                 `json:"symbol"`
-	Overview               SectorOverview         `json:"overview"`
-	TopCompanies           []TopCompany           `json:"topCompanies"`
-	TopPerformingCompanies []PerformingCompany    `json:"topPerformingCompanies"`
-	TopGrowthCompanies     []GrowthCompany        `json:"topGrowthCompanies"`
+	SectorKey              string              `json:"sectorKey"`
+	SectorName             string              `json:"sectorName"`
+	Name                   string              `json:"name"`
+	Symbol                 string              `json:"symbol"`
+	Overview               SectorOverview      `json:"overview"`
+	TopCompanies           []TopCompany        `json:"topCompanies"`
+	TopPerformingCompanies []PerformingCompany `json:"topPerformingCompanies"`
+	TopGrowthCompanies     []GrowthCompany     `json:"topGrowthCompanies"`
 }
 
 type PerformingCompany struct {

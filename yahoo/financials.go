@@ -49,9 +49,9 @@ var quarterlyCashFlowTypes = []string{
 
 // FinancialItem represents a single financial data point.
 type FinancialItem struct {
-	Date           string  `json:"asOfDate"`
-	ReportedValue  float64 `json:"-"`
-	CurrencyCode   string  `json:"currencyCode"`
+	Date          string  `json:"asOfDate"`
+	ReportedValue float64 `json:"-"`
+	CurrencyCode  string  `json:"currencyCode"`
 }
 
 // FinancialResult holds parsed financial data for a metric.

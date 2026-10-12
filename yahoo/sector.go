@@ -13,22 +13,22 @@ type SectorResponse struct {
 }
 
 type SectorData struct {
-	Name         string              `json:"name"`
-	Symbol       string              `json:"symbol"`
-	Overview     SectorOverview      `json:"overview"`
-	TopCompanies []TopCompany        `json:"topCompanies"`
-	TopETFs      []TopFund           `json:"topETFs"`
-	TopMutualFunds []TopFund         `json:"topMutualFunds"`
-	Industries   []IndustryListItem  `json:"industries"`
+	Name           string             `json:"name"`
+	Symbol         string             `json:"symbol"`
+	Overview       SectorOverview     `json:"overview"`
+	TopCompanies   []TopCompany       `json:"topCompanies"`
+	TopETFs        []TopFund          `json:"topETFs"`
+	TopMutualFunds []TopFund          `json:"topMutualFunds"`
+	Industries     []IndustryListItem `json:"industries"`
 }
 
 type SectorOverview struct {
-	CompaniesCount  int        `json:"companiesCount"`
-	MarketCap       RawFmt     `json:"marketCap"`
-	Description     string     `json:"description"`
-	IndustriesCount int        `json:"industriesCount"`
-	MarketWeight    RawFmt     `json:"marketWeight"`
-	EmployeeCount   RawFmt     `json:"employeeCount"`
+	CompaniesCount  int    `json:"companiesCount"`
+	MarketCap       RawFmt `json:"marketCap"`
+	Description     string `json:"description"`
+	IndustriesCount int    `json:"industriesCount"`
+	MarketWeight    RawFmt `json:"marketWeight"`
+	EmployeeCount   RawFmt `json:"employeeCount"`
 }
 
 type RawFmt struct {
