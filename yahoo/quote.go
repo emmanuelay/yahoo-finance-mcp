@@ -1,19 +1,20 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
 
 // GetQuote fetches real-time price and summary details for a symbol.
-func (c *Client) GetQuote(symbol string) (*PriceData, *SummaryDetailData, error) {
+func (c *Client) GetQuote(ctx context.Context, symbol string) (*PriceData, *SummaryDetailData, error) {
 	params := url.Values{
 		"modules": {"price,summaryDetail"},
 	}
 
 	var resp QuoteSummaryResponse
 	path := fmt.Sprintf("/v10/finance/quoteSummary/%s", url.PathEscape(symbol))
-	if err := c.GetJSON(path, params, true, &resp); err != nil {
+	if err := c.GetJSON(ctx, path, params, true, &resp); err != nil {
 		return nil, nil, fmt.Errorf("get quote: %w", err)
 	}
 

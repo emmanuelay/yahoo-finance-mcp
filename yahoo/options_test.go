@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -47,7 +48,7 @@ func TestGetOptions_Success(t *testing.T) {
 		}`), nil
 	})
 
-	result, err := client.GetOptions("AAPL", "")
+	result, err := client.GetOptions(context.Background(), "AAPL", "")
 	if err != nil {
 		t.Fatalf("GetOptions() error: %v", err)
 	}
@@ -91,7 +92,7 @@ func TestGetOptions_WithExpiration(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetOptions("AAPL", "1700000000")
+	_, err := client.GetOptions(context.Background(), "AAPL", "1700000000")
 	if err != nil {
 		t.Fatalf("GetOptions() error: %v", err)
 	}
@@ -110,7 +111,7 @@ func TestGetOptions_NoExpiration(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetOptions("AAPL", "")
+	_, err := client.GetOptions(context.Background(), "AAPL", "")
 	if err != nil {
 		t.Fatalf("GetOptions() error: %v", err)
 	}
@@ -126,7 +127,7 @@ func TestGetOptions_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetOptions("INVALID", "")
+	_, err := client.GetOptions(context.Background(), "INVALID", "")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -140,7 +141,7 @@ func TestGetOptions_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"optionChain": {"result": []}}`), nil
 	})
 
-	_, err := client.GetOptions("UNKNOWN", "")
+	_, err := client.GetOptions(context.Background(), "UNKNOWN", "")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}

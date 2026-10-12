@@ -1,13 +1,14 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strconv"
 )
 
 // Search finds symbols and companies matching the query.
-func (c *Client) Search(query string, limit int) (*SearchResponse, error) {
+func (c *Client) Search(ctx context.Context, query string, limit int) (*SearchResponse, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -21,7 +22,7 @@ func (c *Client) Search(query string, limit int) (*SearchResponse, error) {
 	}
 
 	var resp SearchResponse
-	if err := c.GetJSON("/v1/finance/search", params, false, &resp); err != nil {
+	if err := c.GetJSON(ctx, "/v1/finance/search", params, false, &resp); err != nil {
 		return nil, fmt.Errorf("search: %w", err)
 	}
 

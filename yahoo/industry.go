@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
@@ -37,7 +38,7 @@ type GrowthCompany struct {
 }
 
 // GetIndustry fetches industry data by key (e.g., "consumer-electronics", "semiconductors").
-func (c *Client) GetIndustry(key string) (*IndustryData, error) {
+func (c *Client) GetIndustry(ctx context.Context, key string) (*IndustryData, error) {
 	params := url.Values{
 		"formatted":   {"true"},
 		"withReturns": {"true"},
@@ -48,7 +49,7 @@ func (c *Client) GetIndustry(key string) (*IndustryData, error) {
 	apiURL := fmt.Sprintf("%s/industries/%s", query1BaseURL, url.PathEscape(key))
 
 	var resp IndustryResponse
-	if err := c.GetAbsoluteJSON(apiURL, params, &resp); err != nil {
+	if err := c.GetAbsoluteJSON(ctx, apiURL, params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get industry %q: %w", key, err)
 	}
 

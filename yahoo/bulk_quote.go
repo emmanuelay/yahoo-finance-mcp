@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -43,7 +44,7 @@ type BulkQuoteResult struct {
 }
 
 // GetBulkQuotes fetches quotes for multiple symbols in a single API call.
-func (c *Client) GetBulkQuotes(symbols []string) ([]BulkQuoteResult, error) {
+func (c *Client) GetBulkQuotes(ctx context.Context, symbols []string) ([]BulkQuoteResult, error) {
 	if len(symbols) == 0 {
 		return nil, fmt.Errorf("at least one symbol is required")
 	}
@@ -56,7 +57,7 @@ func (c *Client) GetBulkQuotes(symbols []string) ([]BulkQuoteResult, error) {
 	}
 
 	var resp BulkQuoteResponse
-	if err := c.GetJSON("/v7/finance/quote", params, true, &resp); err != nil {
+	if err := c.GetJSON(ctx, "/v7/finance/quote", params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get bulk quotes: %w", err)
 	}
 

@@ -28,7 +28,7 @@ func (h *Handlers) HandleGetQuote(ctx context.Context, req mcp.CallToolRequest) 
 	}
 	symbol = strings.ToUpper(symbol)
 
-	price, detail, err := h.client.GetQuote(symbol)
+	price, detail, err := h.client.GetQuote(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get quote for %s: %v", symbol, err)), nil
 	}
@@ -46,7 +46,7 @@ func (h *Handlers) HandleGetChart(ctx context.Context, req mcp.CallToolRequest) 
 	rangeStr := req.GetString("range", "1mo")
 	interval := req.GetString("interval", "1d")
 
-	chart, err := h.client.GetChart(symbol, rangeStr, interval)
+	chart, err := h.client.GetChart(ctx, symbol, rangeStr, interval)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get chart for %s: %v", symbol, err)), nil
 	}
@@ -63,7 +63,7 @@ func (h *Handlers) HandleSearch(ctx context.Context, req mcp.CallToolRequest) (*
 
 	limit := req.GetInt("limit", 10)
 
-	results, err := h.client.Search(query, limit)
+	results, err := h.client.Search(ctx, query, limit)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Search failed: %v", err)), nil
 	}
@@ -81,7 +81,7 @@ func (h *Handlers) HandleGetFinancials(ctx context.Context, req mcp.CallToolRequ
 	statement := req.GetString("statement", "income")
 	quarterly := req.GetBool("quarterly", false)
 
-	results, err := h.client.GetFinancials(symbol, statement, quarterly)
+	results, err := h.client.GetFinancials(ctx, symbol, statement, quarterly)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get financials for %s: %v", symbol, err)), nil
 	}
@@ -98,7 +98,7 @@ func (h *Handlers) HandleGetOptions(ctx context.Context, req mcp.CallToolRequest
 
 	expiration := req.GetString("expiration", "")
 
-	result, err := h.client.GetOptions(symbol, expiration)
+	result, err := h.client.GetOptions(ctx, symbol, expiration)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get options for %s: %v", symbol, err)), nil
 	}
@@ -113,7 +113,7 @@ func (h *Handlers) HandleGetRecommendations(ctx context.Context, req mcp.CallToo
 		return mcp.NewToolResultError("symbol is required"), nil
 	}
 
-	trend, err := h.client.GetRecommendations(symbol)
+	trend, err := h.client.GetRecommendations(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get recommendations for %s: %v", symbol, err)), nil
 	}
@@ -130,7 +130,7 @@ func (h *Handlers) HandleGetNews(ctx context.Context, req mcp.CallToolRequest) (
 
 	count := req.GetInt("count", 5)
 
-	news, err := h.client.GetNews(symbol, count)
+	news, err := h.client.GetNews(ctx, symbol, count)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get news for %s: %v", symbol, err)), nil
 	}
@@ -156,7 +156,7 @@ func (h *Handlers) HandleGetBulkQuotes(ctx context.Context, req mcp.CallToolRequ
 		return mcp.NewToolResultError("at least one symbol is required"), nil
 	}
 
-	results, err := h.client.GetBulkQuotes(symbols)
+	results, err := h.client.GetBulkQuotes(ctx, symbols)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk quotes: %v", err)), nil
 	}
@@ -185,7 +185,7 @@ func (h *Handlers) HandleGetBulkSpark(ctx context.Context, req mcp.CallToolReque
 	rangeStr := req.GetString("range", "1mo")
 	interval := req.GetString("interval", "1d")
 
-	results, err := h.client.GetBulkSpark(symbols, rangeStr, interval)
+	results, err := h.client.GetBulkSpark(ctx, symbols, rangeStr, interval)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk spark data: %v", err)), nil
 	}
@@ -200,7 +200,7 @@ func (h *Handlers) HandleGetProfile(ctx context.Context, req mcp.CallToolRequest
 		return mcp.NewToolResultError("symbol is required"), nil
 	}
 
-	profile, quoteType, err := h.client.GetProfile(symbol)
+	profile, quoteType, err := h.client.GetProfile(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get profile for %s: %v", symbol, err)), nil
 	}
@@ -215,7 +215,7 @@ func (h *Handlers) HandleGetSector(ctx context.Context, req mcp.CallToolRequest)
 		return mcp.NewToolResultError("key is required"), nil
 	}
 
-	data, err := h.client.GetSector(key)
+	data, err := h.client.GetSector(ctx, key)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get sector %q: %v", key, err)), nil
 	}
@@ -230,7 +230,7 @@ func (h *Handlers) HandleGetIndustry(ctx context.Context, req mcp.CallToolReques
 		return mcp.NewToolResultError("key is required"), nil
 	}
 
-	data, err := h.client.GetIndustry(key)
+	data, err := h.client.GetIndustry(ctx, key)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get industry %q: %v", key, err)), nil
 	}
@@ -245,7 +245,7 @@ func (h *Handlers) HandleGetMarketSummary(ctx context.Context, req mcp.CallToolR
 		return mcp.NewToolResultError("market is required"), nil
 	}
 
-	items, err := h.client.GetMarketSummary(market)
+	items, err := h.client.GetMarketSummary(ctx, market)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market summary for %s: %v", market, err)), nil
 	}
@@ -260,7 +260,7 @@ func (h *Handlers) HandleGetMarketStatus(ctx context.Context, req mcp.CallToolRe
 		return mcp.NewToolResultError("market is required"), nil
 	}
 
-	groups, err := h.client.GetMarketStatus(market)
+	groups, err := h.client.GetMarketStatus(ctx, market)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market status for %s: %v", market, err)), nil
 	}

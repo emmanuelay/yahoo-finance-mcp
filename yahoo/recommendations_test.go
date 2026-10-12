@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -43,7 +44,7 @@ func TestGetRecommendations_Success(t *testing.T) {
 		}`), nil
 	})
 
-	result, err := client.GetRecommendations("AAPL")
+	result, err := client.GetRecommendations(context.Background(), "AAPL")
 	if err != nil {
 		t.Fatalf("GetRecommendations() error: %v", err)
 	}
@@ -83,7 +84,7 @@ func TestGetRecommendations_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetRecommendations("INVALID")
+	_, err := client.GetRecommendations(context.Background(), "INVALID")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -97,7 +98,7 @@ func TestGetRecommendations_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"quoteSummary": {"result": []}}`), nil
 	})
 
-	_, err := client.GetRecommendations("UNKNOWN")
+	_, err := client.GetRecommendations(context.Background(), "UNKNOWN")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}

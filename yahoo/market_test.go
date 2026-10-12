@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -41,7 +42,7 @@ func TestGetMarketSummary_Success(t *testing.T) {
 		}`), nil
 	})
 
-	results, err := client.GetMarketSummary("US")
+	results, err := client.GetMarketSummary(context.Background(), "US")
 	if err != nil {
 		t.Fatalf("GetMarketSummary() error: %v", err)
 	}
@@ -83,7 +84,7 @@ func TestGetMarketSummary_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetMarketSummary("INVALID")
+	_, err := client.GetMarketSummary(context.Background(), "INVALID")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -97,7 +98,7 @@ func TestGetMarketSummary_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetMarketSummary("US")
+	_, err := client.GetMarketSummary(context.Background(), "US")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}
@@ -136,7 +137,7 @@ func TestGetMarketStatus_Success(t *testing.T) {
 		}`), nil
 	})
 
-	groups, err := client.GetMarketStatus("US")
+	groups, err := client.GetMarketStatus(context.Background(), "US")
 	if err != nil {
 		t.Fatalf("GetMarketStatus() error: %v", err)
 	}
@@ -183,7 +184,7 @@ func TestGetMarketStatus_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetMarketStatus("INVALID")
+	_, err := client.GetMarketStatus(context.Background(), "INVALID")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -197,7 +198,7 @@ func TestGetMarketStatus_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetMarketStatus("US")
+	_, err := client.GetMarketStatus(context.Background(), "US")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}

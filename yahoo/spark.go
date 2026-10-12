@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -22,7 +23,7 @@ type SparkResult struct {
 }
 
 // GetBulkSpark fetches simplified chart data for multiple symbols in a single call.
-func (c *Client) GetBulkSpark(symbols []string, rangeStr, interval string) (SparkResponse, error) {
+func (c *Client) GetBulkSpark(ctx context.Context, symbols []string, rangeStr, interval string) (SparkResponse, error) {
 	if len(symbols) == 0 {
 		return nil, fmt.Errorf("at least one symbol is required")
 	}
@@ -43,7 +44,7 @@ func (c *Client) GetBulkSpark(symbols []string, rangeStr, interval string) (Spar
 	}
 
 	var resp SparkResponse
-	if err := c.GetJSON("/v8/finance/spark", params, false, &resp); err != nil {
+	if err := c.GetJSON(ctx, "/v8/finance/spark", params, false, &resp); err != nil {
 		return nil, fmt.Errorf("get bulk spark: %w", err)
 	}
 

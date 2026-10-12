@@ -3,6 +3,7 @@
 package yahoo
 
 import (
+	"context"
 	"os"
 	"testing"
 )
@@ -18,7 +19,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestIntegration_GetQuote(t *testing.T) {
-	price, detail, err := integrationClient.GetQuote(testSymbol)
+	price, detail, err := integrationClient.GetQuote(context.Background(), testSymbol)
 	if err != nil {
 		t.Fatalf("GetQuote(%q) error: %v", testSymbol, err)
 	}
@@ -38,7 +39,7 @@ func TestIntegration_GetQuote(t *testing.T) {
 }
 
 func TestIntegration_GetChart(t *testing.T) {
-	result, err := integrationClient.GetChart(testSymbol, "5d", "1d")
+	result, err := integrationClient.GetChart(context.Background(), testSymbol, "5d", "1d")
 	if err != nil {
 		t.Fatalf("GetChart(%q) error: %v", testSymbol, err)
 	}
@@ -58,7 +59,7 @@ func TestIntegration_GetChart(t *testing.T) {
 }
 
 func TestIntegration_Search(t *testing.T) {
-	resp, err := integrationClient.Search("Apple", 5)
+	resp, err := integrationClient.Search(context.Background(), "Apple", 5)
 	if err != nil {
 		t.Fatalf("Search(%q) error: %v", "Apple", err)
 	}
@@ -80,7 +81,7 @@ func TestIntegration_Search(t *testing.T) {
 }
 
 func TestIntegration_GetNews(t *testing.T) {
-	news, err := integrationClient.GetNews(testSymbol, 3)
+	news, err := integrationClient.GetNews(context.Background(), testSymbol, 3)
 	if err != nil {
 		t.Fatalf("GetNews(%q) error: %v", testSymbol, err)
 	}
@@ -97,7 +98,7 @@ func TestIntegration_GetNews(t *testing.T) {
 }
 
 func TestIntegration_GetOptions(t *testing.T) {
-	result, err := integrationClient.GetOptions(testSymbol, "")
+	result, err := integrationClient.GetOptions(context.Background(), testSymbol, "")
 	if err != nil {
 		t.Fatalf("GetOptions(%q) error: %v", testSymbol, err)
 	}
@@ -120,7 +121,7 @@ func TestIntegration_GetOptions(t *testing.T) {
 }
 
 func TestIntegration_GetProfile(t *testing.T) {
-	profile, quoteType, err := integrationClient.GetProfile(testSymbol)
+	profile, quoteType, err := integrationClient.GetProfile(context.Background(), testSymbol)
 	if err != nil {
 		t.Fatalf("GetProfile(%q) error: %v", testSymbol, err)
 	}
@@ -157,7 +158,7 @@ func TestIntegration_GetFinancials(t *testing.T) {
 			label = "quarterly " + label
 		}
 		t.Run(label, func(t *testing.T) {
-			results, err := integrationClient.GetFinancials(testSymbol, tc.statement, tc.quarterly)
+			results, err := integrationClient.GetFinancials(context.Background(), testSymbol, tc.statement, tc.quarterly)
 			if err != nil {
 				t.Fatalf("GetFinancials(%q, %q, %v) error: %v", testSymbol, tc.statement, tc.quarterly, err)
 			}
@@ -175,7 +176,7 @@ func TestIntegration_GetFinancials(t *testing.T) {
 }
 
 func TestIntegration_GetRecommendations(t *testing.T) {
-	result, err := integrationClient.GetRecommendations(testSymbol)
+	result, err := integrationClient.GetRecommendations(context.Background(), testSymbol)
 	if err != nil {
 		t.Fatalf("GetRecommendations(%q) error: %v", testSymbol, err)
 	}

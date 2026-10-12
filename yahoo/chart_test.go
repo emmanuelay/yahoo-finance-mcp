@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -41,7 +42,7 @@ func TestGetChart_Success(t *testing.T) {
 		}`), nil
 	})
 
-	result, err := client.GetChart("AAPL", "1mo", "1d")
+	result, err := client.GetChart(context.Background(), "AAPL", "1mo", "1d")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
@@ -80,7 +81,7 @@ func TestGetChart_Defaults(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("AAPL", "", "")
+	_, err := client.GetChart(context.Background(), "AAPL", "", "")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
@@ -103,7 +104,7 @@ func TestGetChart_CustomParams(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("AAPL", "5d", "15m")
+	_, err := client.GetChart(context.Background(), "AAPL", "5d", "15m")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
@@ -119,7 +120,7 @@ func TestGetChart_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("INVALID", "1mo", "1d")
+	_, err := client.GetChart(context.Background(), "INVALID", "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -133,7 +134,7 @@ func TestGetChart_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"chart": {"result": []}}`), nil
 	})
 
-	_, err := client.GetChart("UNKNOWN", "1mo", "1d")
+	_, err := client.GetChart(context.Background(), "UNKNOWN", "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}

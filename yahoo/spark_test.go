@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -40,7 +41,7 @@ func TestGetBulkSpark_Success(t *testing.T) {
 		}`), nil
 	})
 
-	resp, err := client.GetBulkSpark([]string{"AAPL", "MSFT"}, "5d", "1h")
+	resp, err := client.GetBulkSpark(context.Background(), []string{"AAPL", "MSFT"}, "5d", "1h")
 	if err != nil {
 		t.Fatalf("GetBulkSpark() error: %v", err)
 	}
@@ -89,7 +90,7 @@ func TestGetBulkSpark_Defaults(t *testing.T) {
 		}`), nil
 	})
 
-	resp, err := client.GetBulkSpark([]string{"TSLA"}, "", "")
+	resp, err := client.GetBulkSpark(context.Background(), []string{"TSLA"}, "", "")
 	if err != nil {
 		t.Fatalf("GetBulkSpark() error: %v", err)
 	}
@@ -104,7 +105,7 @@ func TestGetBulkSpark_EmptySymbols(t *testing.T) {
 		return nil, nil
 	})
 
-	_, err := client.GetBulkSpark([]string{}, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), []string{}, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for empty symbols")
 	}
@@ -124,7 +125,7 @@ func TestGetBulkSpark_TooManySymbols(t *testing.T) {
 		symbols[i] = fmt.Sprintf("SYM%d", i)
 	}
 
-	_, err := client.GetBulkSpark(symbols, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), symbols, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for too many symbols")
 	}
@@ -138,7 +139,7 @@ func TestGetBulkSpark_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetBulkSpark([]string{"AAPL"}, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), []string{"AAPL"}, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}

@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -189,7 +190,7 @@ func TestGetFinancials_InvalidStatement(t *testing.T) {
 		return nil, nil
 	})
 
-	_, err := client.GetFinancials("AAPL", "invalid", false)
+	_, err := client.GetFinancials(context.Background(), "AAPL", "invalid", false)
 	if err == nil {
 		t.Fatal("expected error for invalid statement type")
 	}
@@ -221,7 +222,7 @@ func TestGetFinancials_Success(t *testing.T) {
 		}`), nil
 	})
 
-	results, err := client.GetFinancials("AAPL", "income", false)
+	results, err := client.GetFinancials(context.Background(), "AAPL", "income", false)
 	if err != nil {
 		t.Fatalf("GetFinancials() error: %v", err)
 	}

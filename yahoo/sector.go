@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
@@ -71,7 +72,7 @@ var ValidSectorKeys = []string{
 }
 
 // GetSector fetches sector data by key (e.g., "technology", "healthcare").
-func (c *Client) GetSector(key string) (*SectorData, error) {
+func (c *Client) GetSector(ctx context.Context, key string) (*SectorData, error) {
 	params := url.Values{
 		"formatted":   {"true"},
 		"withReturns": {"true"},
@@ -82,7 +83,7 @@ func (c *Client) GetSector(key string) (*SectorData, error) {
 	apiURL := fmt.Sprintf("%s/sectors/%s", query1BaseURL, url.PathEscape(key))
 
 	var resp SectorResponse
-	if err := c.GetAbsoluteJSON(apiURL, params, &resp); err != nil {
+	if err := c.GetAbsoluteJSON(ctx, apiURL, params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get sector %q: %w", key, err)
 	}
 

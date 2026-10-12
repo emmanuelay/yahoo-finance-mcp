@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -51,7 +52,7 @@ func TestGetProfile_Success(t *testing.T) {
 		}`), nil
 	})
 
-	profile, quoteType, err := client.GetProfile("AAPL")
+	profile, quoteType, err := client.GetProfile(context.Background(), "AAPL")
 	if err != nil {
 		t.Fatalf("GetProfile() error: %v", err)
 	}
@@ -90,7 +91,7 @@ func TestGetProfile_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, _, err := client.GetProfile("INVALID")
+	_, _, err := client.GetProfile(context.Background(), "INVALID")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -104,7 +105,7 @@ func TestGetProfile_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"quoteSummary": {"result": []}}`), nil
 	})
 
-	_, _, err := client.GetProfile("UNKNOWN")
+	_, _, err := client.GetProfile(context.Background(), "UNKNOWN")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}

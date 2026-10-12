@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -41,7 +42,7 @@ func TestGetNews_Success(t *testing.T) {
 		}`), nil
 	})
 
-	news, err := client.GetNews("AAPL", 5)
+	news, err := client.GetNews(context.Background(), "AAPL", 5)
 	if err != nil {
 		t.Fatalf("GetNews() error: %v", err)
 	}
@@ -69,7 +70,7 @@ func TestGetNews_DefaultCount(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	_, err := client.GetNews("AAPL", 0)
+	_, err := client.GetNews(context.Background(), "AAPL", 0)
 	if err != nil {
 		t.Fatalf("GetNews() error: %v", err)
 	}
@@ -84,7 +85,7 @@ func TestGetNews_CustomCount(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	_, err := client.GetNews("TSLA", 10)
+	_, err := client.GetNews(context.Background(), "TSLA", 10)
 	if err != nil {
 		t.Fatalf("GetNews() error: %v", err)
 	}
@@ -95,7 +96,7 @@ func TestGetNews_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	news, err := client.GetNews("UNKNOWN", 5)
+	news, err := client.GetNews(context.Background(), "UNKNOWN", 5)
 	if err != nil {
 		t.Fatalf("GetNews() error: %v", err)
 	}
