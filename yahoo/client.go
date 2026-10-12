@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,9 +10,14 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"sync"
+	"time"
 )
 
 const baseURL = "https://query2.finance.yahoo.com"
+
+// defaultTimeout bounds every HTTP request as a safety net on top of the
+// caller's context, so a stalled upstream never hangs a tool call forever.
+const defaultTimeout = 30 * time.Second
 
 var userAgents = []string{
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -34,18 +40,26 @@ func NewClient() *Client {
 	jar, _ := cookiejar.New(nil)
 	return &Client{
 		httpClient: &http.Client{
-			Jar: jar,
+			Jar:     jar,
+			Timeout: defaultTimeout,
 		},
 	}
 }
 
+// NewClientWithHTTP creates a client that sends requests through hc.
+// It exists so callers (and tests) can supply their own transport, cookie
+// jar, or timeout; hc must not be nil.
+func NewClientWithHTTP(hc *http.Client) *Client {
+	return &Client{httpClient: hc}
+}
+
 // authenticate performs the cookie/crumb flow.
-func (c *Client) authenticate() error {
+func (c *Client) authenticate(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	// Step 1: GET fc.yahoo.com to get cookies (expect 404)
-	req, err := http.NewRequest("GET", "https://fc.yahoo.com", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://fc.yahoo.com", nil)
 	if err != nil {
 		return fmt.Errorf("creating cookie request: %w", err)
 	}
@@ -57,7 +71,7 @@ func (c *Client) authenticate() error {
 	resp.Body.Close()
 
 	// Step 2: GET crumb using cookies
-	req, err = http.NewRequest("GET", baseURL+"/v1/test/getcrumb", nil)
+	req, err = http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/v1/test/getcrumb", nil)
 	if err != nil {
 		return fmt.Errorf("creating crumb request: %w", err)
 	}
@@ -83,13 +97,13 @@ func (c *Client) authenticate() error {
 }
 
 // ensureAuth performs lazy authentication on first call.
-func (c *Client) ensureAuth() error {
+func (c *Client) ensureAuth(ctx context.Context) error {
 	c.mu.RLock()
 	authed := c.authed
 	c.mu.RUnlock()
 
 	if !authed {
-		return c.authenticate()
+		return c.authenticate(ctx)
 	}
 	return nil
 }
@@ -101,41 +115,55 @@ func (c *Client) getCrumb() string {
 	return c.crumb
 }
 
-// Get performs an authenticated GET request to a Yahoo Finance API endpoint.
-// If needsCrumb is true, the crumb parameter is appended.
-func (c *Client) Get(path string, params url.Values, needsCrumb bool) ([]byte, error) {
+// Get is the low-level request method for a path on the default Yahoo
+// Finance host (query2). Most callers want the typed methods such as
+// GetQuote; use Get to reach an endpoint this package does not wrap.
+// If needsCrumb is true, the client authenticates first and appends the
+// crumb, which the quoteSummary, quote, options and fundamentals
+// endpoints require and the chart, spark and search endpoints do not.
+func (c *Client) Get(ctx context.Context, path string, params url.Values, needsCrumb bool) ([]byte, error) {
+	return c.GetAbsolute(ctx, baseURL+path, params, needsCrumb)
+}
+
+// GetJSON is Get followed by json.Unmarshal into v.
+func (c *Client) GetJSON(ctx context.Context, path string, params url.Values, needsCrumb bool, v any) error {
+	return c.GetAbsoluteJSON(ctx, baseURL+path, params, needsCrumb, v)
+}
+
+// GetAbsoluteJSON is GetAbsolute followed by json.Unmarshal into v.
+func (c *Client) GetAbsoluteJSON(ctx context.Context, absoluteURL string, params url.Values, needsCrumb bool, v any) error {
+	body, err := c.GetAbsolute(ctx, absoluteURL, params, needsCrumb)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(body, v); err != nil {
+		return fmt.Errorf("parsing JSON response: %w", err)
+	}
+	return nil
+}
+
+// GetAbsolute is the low-level request method for an absolute URL, for
+// endpoints hosted outside query2 (e.g. query1). It is the single request
+// path shared by every typed method: it attaches the crumb when needed,
+// re-authenticates once on 401/403, and rejects any non-200 response.
+func (c *Client) GetAbsolute(ctx context.Context, absoluteURL string, params url.Values, needsCrumb bool) ([]byte, error) {
 	if needsCrumb {
-		if err := c.ensureAuth(); err != nil {
+		if err := c.ensureAuth(ctx); err != nil {
 			return nil, err
 		}
 	}
 
-	fullURL := baseURL + path
-	if needsCrumb {
-		if params == nil {
-			params = url.Values{}
-		}
-		params.Set("crumb", c.getCrumb())
-	}
-	if len(params) > 0 {
-		fullURL += "?" + params.Encode()
-	}
-
-	body, statusCode, err := c.doGet(fullURL)
+	body, statusCode, err := c.doGet(ctx, buildURL(absoluteURL, params, c.crumbIf(needsCrumb)))
 	if err != nil {
 		return nil, err
 	}
 
-	// Retry on 401/403: re-authenticate once and retry
+	// Retry on 401/403: re-authenticate once and retry with the fresh crumb.
 	if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-		if err := c.authenticate(); err != nil {
+		if err := c.authenticate(ctx); err != nil {
 			return nil, fmt.Errorf("re-authentication failed: %w", err)
 		}
-		if needsCrumb {
-			params.Set("crumb", c.getCrumb())
-			fullURL = baseURL + path + "?" + params.Encode()
-		}
-		body, statusCode, err = c.doGet(fullURL)
+		body, statusCode, err = c.doGet(ctx, buildURL(absoluteURL, params, c.crumbIf(needsCrumb)))
 		if err != nil {
 			return nil, err
 		}
@@ -148,8 +176,32 @@ func (c *Client) Get(path string, params url.Values, needsCrumb bool) ([]byte, e
 	return body, nil
 }
 
-func (c *Client) doGet(url string) ([]byte, int, error) {
-	req, err := http.NewRequest("GET", url, nil)
+// crumbIf returns the current crumb when needed, or "" otherwise.
+func (c *Client) crumbIf(needsCrumb bool) string {
+	if !needsCrumb {
+		return ""
+	}
+	return c.getCrumb()
+}
+
+// buildURL encodes params onto absoluteURL, adding the crumb when non-empty.
+// It copies params so the caller's map is never mutated.
+func buildURL(absoluteURL string, params url.Values, crumb string) string {
+	q := make(url.Values, len(params)+1)
+	for k, v := range params {
+		q[k] = v
+	}
+	if crumb != "" {
+		q.Set("crumb", crumb)
+	}
+	if len(q) == 0 {
+		return absoluteURL
+	}
+	return absoluteURL + "?" + q.Encode()
+}
+
+func (c *Client) doGet(ctx context.Context, url string) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, fmt.Errorf("creating request: %w", err)
 	}
@@ -168,57 +220,6 @@ func (c *Client) doGet(url string) ([]byte, int, error) {
 	}
 
 	return body, resp.StatusCode, nil
-}
-
-// GetJSON performs a GET and unmarshals the JSON response into v.
-func (c *Client) GetJSON(path string, params url.Values, needsCrumb bool, v interface{}) error {
-	body, err := c.Get(path, params, needsCrumb)
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("parsing JSON response: %w", err)
-	}
-	return nil
-}
-
-// GetAbsoluteJSON fetches an absolute URL with crumb auth and unmarshals the JSON response into v.
-func (c *Client) GetAbsoluteJSON(absoluteURL string, params url.Values, v any) error {
-	if err := c.ensureAuth(); err != nil {
-		return err
-	}
-
-	if params == nil {
-		params = url.Values{}
-	}
-	params.Set("crumb", c.getCrumb())
-	fullURL := absoluteURL + "?" + params.Encode()
-
-	body, statusCode, err := c.doGet(fullURL)
-	if err != nil {
-		return err
-	}
-
-	// Retry on 401/403
-	if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-		if err := c.authenticate(); err != nil {
-			return fmt.Errorf("re-authentication failed: %w", err)
-		}
-		params.Set("crumb", c.getCrumb())
-		fullURL = absoluteURL + "?" + params.Encode()
-		body, statusCode, err = c.doGet(fullURL)
-		if err != nil {
-			return err
-		}
-	}
-
-	if statusCode != http.StatusOK {
-		return fmt.Errorf("API request failed with status %d: %s", statusCode, string(body))
-	}
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("parsing JSON response: %w", err)
-	}
-	return nil
 }
 
 func randomUA() string {

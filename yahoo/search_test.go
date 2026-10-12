@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -40,7 +41,7 @@ func TestSearch_Success(t *testing.T) {
 		}`), nil
 	})
 
-	resp, err := client.Search("Apple", 5)
+	resp, err := client.Search(context.Background(), "Apple", 5)
 	if err != nil {
 		t.Fatalf("Search() error: %v", err)
 	}
@@ -68,7 +69,7 @@ func TestSearch_DefaultLimit(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	_, err := client.Search("test", 0)
+	_, err := client.Search(context.Background(), "test", 0)
 	if err != nil {
 		t.Fatalf("Search() error: %v", err)
 	}
@@ -83,7 +84,7 @@ func TestSearch_CustomLimit(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	_, err := client.Search("test", 3)
+	_, err := client.Search(context.Background(), "test", 3)
 	if err != nil {
 		t.Fatalf("Search() error: %v", err)
 	}
@@ -98,5 +99,5 @@ func TestSearch_NoCrumb(t *testing.T) {
 		return jsonResponse(200, `{"quotes": [], "news": [], "count": 0}`), nil
 	})
 
-	client.Search("test", 5)
+	client.Search(context.Background(), "test", 5)
 }

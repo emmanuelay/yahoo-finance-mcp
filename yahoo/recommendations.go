@@ -1,19 +1,20 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
 
 // GetRecommendations fetches analyst recommendation trends for a symbol.
-func (c *Client) GetRecommendations(symbol string) (*RecommendationTrendData, error) {
+func (c *Client) GetRecommendations(ctx context.Context, symbol string) (*RecommendationTrendData, error) {
 	params := url.Values{
 		"modules": {"recommendationTrend"},
 	}
 
 	var resp QuoteSummaryResponse
 	path := fmt.Sprintf("/v10/finance/quoteSummary/%s", url.PathEscape(symbol))
-	if err := c.GetJSON(path, params, true, &resp); err != nil {
+	if err := c.GetJSON(ctx, path, params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get recommendations: %w", err)
 	}
 

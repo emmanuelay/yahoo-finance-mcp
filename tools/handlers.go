@@ -28,7 +28,7 @@ func (h *Handlers) HandleGetQuote(ctx context.Context, req mcp.CallToolRequest) 
 	}
 	symbol = strings.ToUpper(symbol)
 
-	price, detail, err := h.client.GetQuote(symbol)
+	price, detail, err := h.client.GetQuote(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get quote for %s: %v", symbol, err)), nil
 	}
@@ -46,7 +46,7 @@ func (h *Handlers) HandleGetChart(ctx context.Context, req mcp.CallToolRequest) 
 	rangeStr := req.GetString("range", "1mo")
 	interval := req.GetString("interval", "1d")
 
-	chart, err := h.client.GetChart(symbol, rangeStr, interval)
+	chart, err := h.client.GetChart(ctx, symbol, rangeStr, interval)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get chart for %s: %v", symbol, err)), nil
 	}
@@ -63,7 +63,7 @@ func (h *Handlers) HandleSearch(ctx context.Context, req mcp.CallToolRequest) (*
 
 	limit := req.GetInt("limit", 10)
 
-	results, err := h.client.Search(query, limit)
+	results, err := h.client.Search(ctx, query, limit)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Search failed: %v", err)), nil
 	}
@@ -81,7 +81,7 @@ func (h *Handlers) HandleGetFinancials(ctx context.Context, req mcp.CallToolRequ
 	statement := req.GetString("statement", "income")
 	quarterly := req.GetBool("quarterly", false)
 
-	results, err := h.client.GetFinancials(symbol, statement, quarterly)
+	results, err := h.client.GetFinancials(ctx, symbol, statement, quarterly)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get financials for %s: %v", symbol, err)), nil
 	}
@@ -98,7 +98,7 @@ func (h *Handlers) HandleGetOptions(ctx context.Context, req mcp.CallToolRequest
 
 	expiration := req.GetString("expiration", "")
 
-	result, err := h.client.GetOptions(symbol, expiration)
+	result, err := h.client.GetOptions(ctx, symbol, expiration)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get options for %s: %v", symbol, err)), nil
 	}
@@ -113,7 +113,7 @@ func (h *Handlers) HandleGetRecommendations(ctx context.Context, req mcp.CallToo
 		return mcp.NewToolResultError("symbol is required"), nil
 	}
 
-	trend, err := h.client.GetRecommendations(symbol)
+	trend, err := h.client.GetRecommendations(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get recommendations for %s: %v", symbol, err)), nil
 	}
@@ -130,7 +130,7 @@ func (h *Handlers) HandleGetNews(ctx context.Context, req mcp.CallToolRequest) (
 
 	count := req.GetInt("count", 5)
 
-	news, err := h.client.GetNews(symbol, count)
+	news, err := h.client.GetNews(ctx, symbol, count)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get news for %s: %v", symbol, err)), nil
 	}
@@ -156,7 +156,7 @@ func (h *Handlers) HandleGetBulkQuotes(ctx context.Context, req mcp.CallToolRequ
 		return mcp.NewToolResultError("at least one symbol is required"), nil
 	}
 
-	results, err := h.client.GetBulkQuotes(symbols)
+	results, err := h.client.GetBulkQuotes(ctx, symbols)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk quotes: %v", err)), nil
 	}
@@ -185,7 +185,7 @@ func (h *Handlers) HandleGetBulkSpark(ctx context.Context, req mcp.CallToolReque
 	rangeStr := req.GetString("range", "1mo")
 	interval := req.GetString("interval", "1d")
 
-	results, err := h.client.GetBulkSpark(symbols, rangeStr, interval)
+	results, err := h.client.GetBulkSpark(ctx, symbols, rangeStr, interval)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get bulk spark data: %v", err)), nil
 	}
@@ -200,7 +200,7 @@ func (h *Handlers) HandleGetProfile(ctx context.Context, req mcp.CallToolRequest
 		return mcp.NewToolResultError("symbol is required"), nil
 	}
 
-	profile, quoteType, err := h.client.GetProfile(symbol)
+	profile, quoteType, err := h.client.GetProfile(ctx, symbol)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get profile for %s: %v", symbol, err)), nil
 	}
@@ -215,7 +215,7 @@ func (h *Handlers) HandleGetSector(ctx context.Context, req mcp.CallToolRequest)
 		return mcp.NewToolResultError("key is required"), nil
 	}
 
-	data, err := h.client.GetSector(key)
+	data, err := h.client.GetSector(ctx, key)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get sector %q: %v", key, err)), nil
 	}
@@ -230,7 +230,7 @@ func (h *Handlers) HandleGetIndustry(ctx context.Context, req mcp.CallToolReques
 		return mcp.NewToolResultError("key is required"), nil
 	}
 
-	data, err := h.client.GetIndustry(key)
+	data, err := h.client.GetIndustry(ctx, key)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get industry %q: %v", key, err)), nil
 	}
@@ -245,7 +245,7 @@ func (h *Handlers) HandleGetMarketSummary(ctx context.Context, req mcp.CallToolR
 		return mcp.NewToolResultError("market is required"), nil
 	}
 
-	items, err := h.client.GetMarketSummary(market)
+	items, err := h.client.GetMarketSummary(ctx, market)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market summary for %s: %v", market, err)), nil
 	}
@@ -260,7 +260,7 @@ func (h *Handlers) HandleGetMarketStatus(ctx context.Context, req mcp.CallToolRe
 		return mcp.NewToolResultError("market is required"), nil
 	}
 
-	groups, err := h.client.GetMarketStatus(market)
+	groups, err := h.client.GetMarketStatus(ctx, market)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get market status for %s: %v", market, err)), nil
 	}
@@ -286,23 +286,15 @@ func formatBulkQuotes(results []yahoo.BulkQuoteResult) string {
 		if name == "" {
 			name = q.ShortName
 		}
-		if len(name) > 24 {
-			name = name[:22] + ".."
-		}
 
-		changeSign := "+"
-		if q.RegularMarketChange < 0 {
-			changeSign = ""
-		}
-
-		fmt.Fprintf(&b, "%-8s %-25s %10.2f %s%9.2f %s%6.2f%% %14s %12s\n",
+		fmt.Fprintf(&b, "%-8s %-25s %10.2f %10s %8s %14s %12s\n",
 			q.Symbol,
-			name,
+			truncate(name, 24),
 			q.RegularMarketPrice,
-			changeSign, q.RegularMarketChange,
-			changeSign, q.RegularMarketChangePercent,
+			fmtSigned(q.RegularMarketChange),
+			fmtSigned(q.RegularMarketChangePercent)+"%",
 			fmtInt(q.RegularMarketVolume),
-			fmtLargeNumber(float64(q.MarketCap)),
+			fmtLargeNumber(float64(q.MarketCap), q.Currency),
 		)
 	}
 
@@ -349,19 +341,20 @@ func formatBulkSpark(symbolOrder []string, results yahoo.SparkResponse) string {
 			step = n / 50
 		}
 
-		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date", "Close", "Change%")
+		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date (UTC)", "Close", "Change%")
 		for i := 0; i < n; i += step {
-			ts := time.Unix(sr.Timestamps[i], 0)
-			close := sr.Close[i]
-			chgPct := 0.0
-			if sr.ChartPreviousClose > 0 {
-				chgPct = (close - sr.ChartPreviousClose) / sr.ChartPreviousClose * 100
+			ts := time.Unix(sr.Timestamps[i], 0).UTC()
+			closeStr := fmtOptFloat(sr.Close, i)
+			chgStr := "N/A"
+			if i < len(sr.Close) && sr.Close[i] != nil && sr.ChartPreviousClose > 0 {
+				chgPct := (*sr.Close[i] - sr.ChartPreviousClose) / sr.ChartPreviousClose * 100
+				sign := "+"
+				if chgPct < 0 {
+					sign = ""
+				}
+				chgStr = fmt.Sprintf("%s%.2f%%", sign, chgPct)
 			}
-			sign := "+"
-			if chgPct < 0 {
-				sign = ""
-			}
-			fmt.Fprintf(&b, "%-20s %10.2f %s%8.2f%%\n", ts.Format("2006-01-02 15:04"), close, sign, chgPct)
+			fmt.Fprintf(&b, "%-20s %10s %10s\n", ts.Format("2006-01-02 15:04"), closeStr, chgStr)
 		}
 		fmt.Fprintf(&b, "(%d of %d data points)\n", min(n, 50), n)
 	}
@@ -383,15 +376,12 @@ func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string
 	fmt.Fprintf(&b, "Exchange: %s | Currency: %s | Market: %s\n\n", price.ExchangeName, price.Currency, price.MarketState)
 
 	fmt.Fprintf(&b, "Price:           %s\n", fmtPrice(price.RegularMarketPrice.Raw, price.Currency))
-	changeSign := "+"
-	if price.RegularMarketChange.Raw < 0 {
-		changeSign = ""
-	}
-	fmt.Fprintf(&b, "Change:          %s%.2f (%s%.2f%%)\n", changeSign, price.RegularMarketChange.Raw, changeSign, price.RegularMarketChangePercent.Raw)
+	// quoteSummary reports percent changes as fractions (0.0141 == 1.41%).
+	fmt.Fprintf(&b, "Change:          %s (%s%%)\n", fmtSigned(price.RegularMarketChange.Raw), fmtSigned(price.RegularMarketChangePercent.Raw*100))
 	fmt.Fprintf(&b, "Volume:          %s\n", fmtInt(price.RegularMarketVolume.Raw))
 
 	if price.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:      %s\n", fmtLargeNumber(float64(price.MarketCap.Raw)))
+		fmt.Fprintf(&b, "Market Cap:      %s\n", fmtLargeNumber(float64(price.MarketCap.Raw), price.Currency))
 	}
 
 	fmt.Fprintf(&b, "Open:            %s\n", fmtPrice(price.RegularMarketOpen.Raw, price.Currency))
@@ -428,11 +418,11 @@ func formatQuote(price *yahoo.PriceData, detail *yahoo.SummaryDetailData) string
 	// Pre/Post market info
 	if price.MarketState == "PRE" && price.PreMarketPrice.Raw > 0 {
 		fmt.Fprintf(&b, "\n--- Pre-Market ---\n")
-		fmt.Fprintf(&b, "Price:  %s (%.2f, %.2f%%)\n", fmtPrice(price.PreMarketPrice.Raw, price.Currency), price.PreMarketChange.Raw, price.PreMarketChangePercent.Raw)
+		fmt.Fprintf(&b, "Price:  %s (%s, %s%%)\n", fmtPrice(price.PreMarketPrice.Raw, price.Currency), fmtSigned(price.PreMarketChange.Raw), fmtSigned(price.PreMarketChangePercent.Raw*100))
 	}
 	if price.MarketState == "POST" && price.PostMarketPrice.Raw > 0 {
 		fmt.Fprintf(&b, "\n--- Post-Market ---\n")
-		fmt.Fprintf(&b, "Price:  %s (%.2f, %.2f%%)\n", fmtPrice(price.PostMarketPrice.Raw, price.Currency), price.PostMarketChange.Raw, price.PostMarketChangePercent.Raw)
+		fmt.Fprintf(&b, "Price:  %s (%s, %s%%)\n", fmtPrice(price.PostMarketPrice.Raw, price.Currency), fmtSigned(price.PostMarketChange.Raw), fmtSigned(price.PostMarketChangePercent.Raw*100))
 	}
 
 	return b.String()
@@ -443,7 +433,9 @@ func formatChart(chart *yahoo.ChartResult) string {
 
 	fmt.Fprintf(&b, "=== %s Chart Data ===\n", chart.Meta.Symbol)
 	fmt.Fprintf(&b, "Exchange: %s | Currency: %s\n", chart.Meta.ExchangeName, chart.Meta.Currency)
-	fmt.Fprintf(&b, "Range: %s | Interval: %s\n\n", chart.Meta.Range, chart.Meta.DataGranularity)
+	fmt.Fprintf(&b, "Range: %s | Interval: %s\n", chart.Meta.Range, chart.Meta.DataGranularity)
+	loc := chartLocation(chart.Meta)
+	fmt.Fprintf(&b, "Timezone: %s\n\n", loc)
 
 	if len(chart.Timestamps) == 0 || len(chart.Indicators.Quote) == 0 {
 		fmt.Fprintf(&b, "No data points available\n")
@@ -463,7 +455,7 @@ func formatChart(chart *yahoo.ChartResult) string {
 	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 82))
 
 	for i := 0; i < total; i += step {
-		ts := time.Unix(chart.Timestamps[i], 0)
+		ts := time.Unix(chart.Timestamps[i], 0).In(loc)
 		dateStr := ts.Format("2006-01-02 15:04")
 
 		open := fmtOptFloat(q.Open, i)
@@ -533,7 +525,7 @@ func formatFinancials(symbol, statement string, quarterly bool, results []yahoo.
 
 		fmt.Fprintf(&b, "%s:\n", displayName)
 		for _, item := range r.Items {
-			fmt.Fprintf(&b, "  %s: %s %s\n", item.Date, fmtLargeNumber(item.ReportedValue), item.CurrencyCode)
+			fmt.Fprintf(&b, "  %s: %s\n", item.Date, fmtLargeNumber(item.ReportedValue, item.CurrencyCode))
 		}
 		fmt.Fprintln(&b)
 	}
@@ -545,7 +537,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "=== %s Options Chain ===\n", result.UnderlyingSymbol)
-	fmt.Fprintf(&b, "Underlying Price: $%.2f\n", result.Quote.RegularMarketPrice)
+	fmt.Fprintf(&b, "Underlying Price: %s\n", fmtPrice(result.Quote.RegularMarketPrice, result.Quote.Currency))
 
 	if len(result.ExpirationDates) > 0 {
 		fmt.Fprintf(&b, "Available Expirations: ")
@@ -557,7 +549,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 			if i > 0 {
 				fmt.Fprintf(&b, ", ")
 			}
-			fmt.Fprintf(&b, "%s", time.Unix(d, 0).Format("2006-01-02"))
+			fmt.Fprintf(&b, "%s", time.Unix(d, 0).UTC().Format("2006-01-02"))
 		}
 		fmt.Fprintln(&b)
 	}
@@ -568,7 +560,7 @@ func formatOptions(result *yahoo.OptionsResult) string {
 	}
 
 	chain := result.Options[0]
-	expDate := time.Unix(chain.ExpirationDate, 0).Format("2006-01-02")
+	expDate := time.Unix(chain.ExpirationDate, 0).UTC().Format("2006-01-02")
 
 	// Calls
 	fmt.Fprintf(&b, "\n--- CALLS (Exp: %s) ---\n", expDate)
@@ -657,9 +649,9 @@ func formatNews(symbol string, news []yahoo.SearchNews) string {
 	}
 
 	for i, n := range news {
-		pubTime := time.Unix(n.ProviderPublishTime, 0)
+		pubTime := time.Unix(n.ProviderPublishTime, 0).UTC()
 		fmt.Fprintf(&b, "%d. %s\n", i+1, n.Title)
-		fmt.Fprintf(&b, "   Publisher: %s | %s\n", n.Publisher, pubTime.Format("2006-01-02 15:04 MST"))
+		fmt.Fprintf(&b, "   Publisher: %s | %s\n", n.Publisher, pubTime.Format("2006-01-02 15:04 UTC"))
 		if n.Link != "" {
 			fmt.Fprintf(&b, "   Link: %s\n", n.Link)
 		}
@@ -759,7 +751,7 @@ func formatSector(data *yahoo.SectorData) string {
 	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
 	fmt.Fprintf(&b, "Industries:   %d\n", ov.IndustriesCount)
 	if ov.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw, "USD"))
 	}
 	if ov.MarketWeight.Raw > 0 {
 		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
@@ -827,7 +819,7 @@ func formatIndustry(data *yahoo.IndustryData) string {
 	}
 	fmt.Fprintf(&b, "Companies:    %d\n", ov.CompaniesCount)
 	if ov.MarketCap.Raw > 0 {
-		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw))
+		fmt.Fprintf(&b, "Market Cap:   %s\n", fmtLargeNumber(ov.MarketCap.Raw, "USD"))
 	}
 	if ov.MarketWeight.Raw > 0 {
 		fmt.Fprintf(&b, "Market Weight: %.2f%%\n", ov.MarketWeight.Raw*100)
@@ -859,12 +851,8 @@ func formatIndustry(data *yahoo.IndustryData) string {
 				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopPerformingCompanies)-10)
 				break
 			}
-			name := c.Name
-			if len(name) > 24 {
-				name = name[:22] + ".."
-			}
 			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %10.2f %12.2f\n",
-				c.Symbol, name, c.YtdReturn.Raw*100, c.LastPrice.Raw, c.TargetPrice.Raw)
+				c.Symbol, truncate(c.Name, 24), c.YtdReturn.Raw*100, c.LastPrice.Raw, c.TargetPrice.Raw)
 		}
 	}
 
@@ -876,12 +864,8 @@ func formatIndustry(data *yahoo.IndustryData) string {
 				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopGrowthCompanies)-10)
 				break
 			}
-			name := c.Name
-			if len(name) > 24 {
-				name = name[:22] + ".."
-			}
 			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %11.1f%%\n",
-				c.Symbol, name, c.YtdReturn.Raw*100, c.GrowthEstimate.Raw*100)
+				c.Symbol, truncate(c.Name, 24), c.YtdReturn.Raw*100, c.GrowthEstimate.Raw*100)
 		}
 	}
 
@@ -902,19 +886,11 @@ func formatMarketSummary(market string, items []yahoo.MarketSummaryItem) string 
 	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 78))
 
 	for _, item := range items {
-		name := item.ShortName
-		if len(name) > 29 {
-			name = name[:27] + ".."
-		}
-		sign := "+"
-		if item.RegularMarketChange < 0 {
-			sign = ""
-		}
-		fmt.Fprintf(&b, "%-12s %-30s %12.2f %s%9.2f %s%6.2f%%\n",
-			item.Symbol, name,
+		fmt.Fprintf(&b, "%-12s %-30s %12.2f %10s %8s\n",
+			item.Symbol, truncate(item.ShortName, 29),
 			item.RegularMarketPrice,
-			sign, item.RegularMarketChange,
-			sign, item.RegularMarketChangePercent)
+			fmtSigned(item.RegularMarketChange),
+			fmtSigned(item.RegularMarketChangePercent)+"%")
 	}
 
 	return b.String()
@@ -955,29 +931,64 @@ func formatMarketStatus(market string, groups []yahoo.MarketTimeGroup) string {
 
 // --- Formatting helpers ---
 
-func fmtPrice(val float64, currency string) string {
-	symbol := "$"
-	switch currency {
-	case "EUR":
-		symbol = "\u20ac"
-	case "GBP", "GBp":
-		symbol = "\u00a3"
-	case "JPY":
-		symbol = "\u00a5"
-	case "CHF":
-		symbol = "CHF "
-	case "SEK":
-		symbol = "SEK "
-	case "NOK":
-		symbol = "NOK "
-	case "DKK":
-		symbol = "DKK "
-	case "CAD":
-		symbol = "C$"
-	case "AUD":
-		symbol = "A$"
+// fmtSigned formats a change value with an explicit sign, e.g. "+1.60" / "-1.28".
+func fmtSigned(val float64) string {
+	return fmt.Sprintf("%+.2f", val)
+}
+
+// truncate shortens s to at most max runes, replacing the tail with "..".
+// It counts runes rather than bytes so multibyte names are never split.
+func truncate(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
 	}
-	return fmt.Sprintf("%s%.2f", symbol, val)
+	return strings.TrimRight(string(r[:max-2]), " ") + ".."
+}
+
+// chartLocation resolves the exchange timezone from chart metadata so rows
+// print in market-local time rather than wherever the server happens to run.
+// Falls back to the fixed GMT offset, then UTC.
+func chartLocation(meta yahoo.ChartMeta) *time.Location {
+	if meta.ExchangeTimezoneName != "" {
+		if loc, err := time.LoadLocation(meta.ExchangeTimezoneName); err == nil {
+			return loc
+		}
+	}
+	if meta.Timezone != "" || meta.GMTOffset != 0 {
+		name := meta.Timezone
+		if name == "" {
+			name = fmt.Sprintf("UTC%+d", meta.GMTOffset/3600)
+		}
+		return time.FixedZone(name, meta.GMTOffset)
+	}
+	return time.UTC
+}
+
+// currencySymbol returns a display prefix for an ISO currency code.
+// Known currencies get their symbol; an empty code falls back to "$"
+// (Yahoo omits it for US-only endpoints); anything else uses the code itself.
+func currencySymbol(currency string) string {
+	switch currency {
+	case "", "USD":
+		return "$"
+	case "EUR":
+		return "\u20ac"
+	case "GBP", "GBp":
+		return "\u00a3"
+	case "JPY":
+		return "\u00a5"
+	case "CAD":
+		return "C$"
+	case "AUD":
+		return "A$"
+	default:
+		return currency + " "
+	}
+}
+
+func fmtPrice(val float64, currency string) string {
+	return fmt.Sprintf("%s%.2f", currencySymbol(currency), val)
 }
 
 func fmtInt(val int64) string {
@@ -1016,25 +1027,26 @@ func fmtInt(val int64) string {
 	return result.String()
 }
 
-func fmtLargeNumber(val float64) string {
+func fmtLargeNumber(val float64, currency string) string {
 	abs := val
 	sign := ""
 	if val < 0 {
 		abs = -val
 		sign = "-"
 	}
+	sym := currencySymbol(currency)
 
 	switch {
 	case abs >= 1e12:
-		return fmt.Sprintf("%s$%.2fT", sign, abs/1e12)
+		return fmt.Sprintf("%s%s%.2fT", sign, sym, abs/1e12)
 	case abs >= 1e9:
-		return fmt.Sprintf("%s$%.2fB", sign, abs/1e9)
+		return fmt.Sprintf("%s%s%.2fB", sign, sym, abs/1e9)
 	case abs >= 1e6:
-		return fmt.Sprintf("%s$%.2fM", sign, abs/1e6)
+		return fmt.Sprintf("%s%s%.2fM", sign, sym, abs/1e6)
 	case abs >= 1e3:
-		return fmt.Sprintf("%s$%.2fK", sign, abs/1e3)
+		return fmt.Sprintf("%s%s%.2fK", sign, sym, abs/1e3)
 	default:
-		return fmt.Sprintf("%s$%.2f", sign, abs)
+		return fmt.Sprintf("%s%s%.2f", sign, sym, abs)
 	}
 }
 

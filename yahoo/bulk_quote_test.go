@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -58,7 +59,7 @@ func TestGetBulkQuotes_Success(t *testing.T) {
 		}`), nil
 	})
 
-	results, err := client.GetBulkQuotes([]string{"AAPL", "MSFT"})
+	results, err := client.GetBulkQuotes(context.Background(), []string{"AAPL", "MSFT"})
 	if err != nil {
 		t.Fatalf("GetBulkQuotes() error: %v", err)
 	}
@@ -107,7 +108,7 @@ func TestGetBulkQuotes_SingleSymbol(t *testing.T) {
 		}`), nil
 	})
 
-	results, err := client.GetBulkQuotes([]string{"TSLA"})
+	results, err := client.GetBulkQuotes(context.Background(), []string{"TSLA"})
 	if err != nil {
 		t.Fatalf("GetBulkQuotes() error: %v", err)
 	}
@@ -125,7 +126,7 @@ func TestGetBulkQuotes_EmptySymbols(t *testing.T) {
 		return nil, nil
 	})
 
-	_, err := client.GetBulkQuotes([]string{})
+	_, err := client.GetBulkQuotes(context.Background(), []string{})
 	if err == nil {
 		t.Fatal("expected error for empty symbols")
 	}
@@ -144,7 +145,7 @@ func TestGetBulkQuotes_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetBulkQuotes([]string{"INVALID1", "INVALID2"})
+	_, err := client.GetBulkQuotes(context.Background(), []string{"INVALID1", "INVALID2"})
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -164,7 +165,7 @@ func TestGetBulkQuotes_TooManySymbols(t *testing.T) {
 		symbols[i] = fmt.Sprintf("SYM%d", i)
 	}
 
-	_, err := client.GetBulkQuotes(symbols)
+	_, err := client.GetBulkQuotes(context.Background(), symbols)
 	if err == nil {
 		t.Fatal("expected error for too many symbols")
 	}
@@ -178,7 +179,7 @@ func TestGetBulkQuotes_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetBulkQuotes([]string{"AAPL"})
+	_, err := client.GetBulkQuotes(context.Background(), []string{"AAPL"})
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}

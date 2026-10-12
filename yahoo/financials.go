@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -49,9 +50,9 @@ var quarterlyCashFlowTypes = []string{
 
 // FinancialItem represents a single financial data point.
 type FinancialItem struct {
-	Date           string  `json:"asOfDate"`
-	ReportedValue  float64 `json:"-"`
-	CurrencyCode   string  `json:"currencyCode"`
+	Date          string  `json:"asOfDate"`
+	ReportedValue float64 `json:"-"`
+	CurrencyCode  string  `json:"currencyCode"`
 }
 
 // FinancialResult holds parsed financial data for a metric.
@@ -63,7 +64,7 @@ type FinancialResult struct {
 // GetFinancials fetches financial statement data for a symbol.
 // statement can be "income", "balance", or "cashflow".
 // If quarterly is true, fetches quarterly data instead of annual.
-func (c *Client) GetFinancials(symbol, statement string, quarterly bool) ([]FinancialResult, error) {
+func (c *Client) GetFinancials(ctx context.Context, symbol, statement string, quarterly bool) ([]FinancialResult, error) {
 	types := getFinancialTypes(statement, quarterly)
 	if len(types) == 0 {
 		return nil, fmt.Errorf("invalid statement type %q (use income, balance, or cashflow)", statement)
@@ -77,7 +78,7 @@ func (c *Client) GetFinancials(symbol, statement string, quarterly bool) ([]Fina
 	}
 
 	path := fmt.Sprintf("/ws/fundamentals-timeseries/v1/finance/timeseries/%s", url.PathEscape(symbol))
-	body, err := c.Get(path, params, true)
+	body, err := c.Get(ctx, path, params, true)
 	if err != nil {
 		return nil, fmt.Errorf("get financials: %w", err)
 	}

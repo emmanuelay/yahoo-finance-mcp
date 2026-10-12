@@ -1,6 +1,8 @@
 package yahoo
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -22,7 +24,7 @@ func TestAuthenticate_Success(t *testing.T) {
 		}
 	})
 
-	err := client.authenticate()
+	err := client.authenticate(context.Background())
 	if err != nil {
 		t.Fatalf("authenticate() error: %v", err)
 	}
@@ -44,7 +46,7 @@ func TestAuthenticate_CrumbFailure(t *testing.T) {
 		}
 	})
 
-	err := client.authenticate()
+	err := client.authenticate(context.Background())
 	if err == nil {
 		t.Fatal("expected error from authenticate()")
 	}
@@ -62,7 +64,7 @@ func TestGet_AddsCrumb(t *testing.T) {
 		return jsonResponse(200, `{"ok":true}`), nil
 	})
 
-	_, err := client.Get("/v10/finance/quoteSummary/AAPL", nil, true)
+	_, err := client.Get(context.Background(), "/v10/finance/quoteSummary/AAPL", nil, true)
 	if err != nil {
 		t.Fatalf("Get() error: %v", err)
 	}
@@ -77,7 +79,7 @@ func TestGet_NoCrumbWhenNotNeeded(t *testing.T) {
 		return jsonResponse(200, `{}`), nil
 	})
 
-	_, err := client.Get("/v8/finance/chart/AAPL", url.Values{"range": {"1d"}}, false)
+	_, err := client.Get(context.Background(), "/v8/finance/chart/AAPL", url.Values{"range": {"1d"}}, false)
 	if err != nil {
 		t.Fatalf("Get() error: %v", err)
 	}
@@ -102,7 +104,7 @@ func TestGet_RetryOn401(t *testing.T) {
 		return jsonResponse(200, `{"data":"ok"}`), nil
 	})
 
-	body, err := client.Get("/v10/finance/quoteSummary/AAPL", nil, true)
+	body, err := client.Get(context.Background(), "/v10/finance/quoteSummary/AAPL", nil, true)
 	if err != nil {
 		t.Fatalf("Get() error: %v", err)
 	}
@@ -119,7 +121,7 @@ func TestGet_NonOKStatus(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.Get("/v10/finance/quoteSummary/AAPL", nil, false)
+	_, err := client.Get(context.Background(), "/v10/finance/quoteSummary/AAPL", nil, false)
 	if err == nil {
 		t.Fatal("expected error for 500 status")
 	}
@@ -137,7 +139,7 @@ func TestGetJSON_Success(t *testing.T) {
 		Name  string `json:"name"`
 		Value int    `json:"value"`
 	}
-	err := client.GetJSON("/test", nil, false, &result)
+	err := client.GetJSON(context.Background(), "/test", nil, false, &result)
 	if err != nil {
 		t.Fatalf("GetJSON() error: %v", err)
 	}
@@ -152,7 +154,7 @@ func TestGetJSON_InvalidJSON(t *testing.T) {
 	})
 
 	var result map[string]interface{}
-	err := client.GetJSON("/test", nil, false, &result)
+	err := client.GetJSON(context.Background(), "/test", nil, false, &result)
 	if err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
@@ -167,7 +169,7 @@ func TestEnsureAuth_SkipsIfAlreadyAuthed(t *testing.T) {
 		return nil, nil
 	})
 
-	err := client.ensureAuth()
+	err := client.ensureAuth(context.Background())
 	if err != nil {
 		t.Fatalf("ensureAuth() error: %v", err)
 	}
@@ -178,5 +180,47 @@ func TestGetCrumb_ThreadSafe(t *testing.T) {
 	crumb := client.getCrumb()
 	if crumb != "test-crumb" {
 		t.Errorf("getCrumb() = %q, want %q", crumb, "test-crumb")
+	}
+}
+
+func TestNewClient_SetsTimeout(t *testing.T) {
+	client := NewClient()
+	if client.httpClient.Timeout != defaultTimeout {
+		t.Errorf("Timeout = %v, want %v", client.httpClient.Timeout, defaultTimeout)
+	}
+}
+
+func TestGet_RespectsCancelledContext(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		if err := req.Context().Err(); err != nil {
+			return nil, err
+		}
+		t.Fatal("request should carry the cancelled context")
+		return nil, nil
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := client.Get(ctx, "/v8/finance/chart/AAPL", nil, false)
+	if err == nil {
+		t.Fatal("expected error from cancelled context")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("error should wrap context.Canceled, got: %v", err)
+	}
+}
+
+func TestBuildURL_DoesNotMutateParams(t *testing.T) {
+	params := url.Values{"range": {"1d"}}
+	got := buildURL("https://example.com/x", params, "abc")
+	if got != "https://example.com/x?crumb=abc&range=1d" {
+		t.Errorf("buildURL() = %q", got)
+	}
+	if _, ok := params["crumb"]; ok {
+		t.Error("buildURL() mutated caller's params")
+	}
+	if got := buildURL("https://example.com/x", nil, ""); got != "https://example.com/x" {
+		t.Errorf("buildURL() with no params = %q", got)
 	}
 }

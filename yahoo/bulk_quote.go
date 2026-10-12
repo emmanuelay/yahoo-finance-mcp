@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -16,34 +17,34 @@ type BulkQuoteResponse struct {
 
 // BulkQuoteResult contains quote data for a single symbol from the bulk endpoint.
 type BulkQuoteResult struct {
-	Symbol                     string  `json:"symbol"`
-	ShortName                  string  `json:"shortName"`
-	LongName                   string  `json:"longName"`
-	Currency                   string  `json:"currency"`
-	Exchange                   string  `json:"exchange"`
-	FullExchangeName           string  `json:"fullExchangeName"`
-	QuoteType                  string  `json:"quoteType"`
-	MarketState                string  `json:"marketState"`
-	RegularMarketPrice         float64 `json:"regularMarketPrice"`
-	RegularMarketChange        float64 `json:"regularMarketChange"`
-	RegularMarketChangePercent float64 `json:"regularMarketChangePercent"`
-	RegularMarketVolume        int64   `json:"regularMarketVolume"`
-	RegularMarketOpen          float64 `json:"regularMarketOpen"`
-	RegularMarketDayHigh       float64 `json:"regularMarketDayHigh"`
-	RegularMarketDayLow        float64 `json:"regularMarketDayLow"`
-	RegularMarketPreviousClose float64 `json:"regularMarketPreviousClose"`
-	MarketCap                  int64   `json:"marketCap"`
-	TrailingPE                 float64 `json:"trailingPE"`
-	ForwardPE                  float64 `json:"forwardPE"`
-	FiftyTwoWeekLow            float64 `json:"fiftyTwoWeekLow"`
-	FiftyTwoWeekHigh           float64 `json:"fiftyTwoWeekHigh"`
-	FiftyDayAverage            float64 `json:"fiftyDayAverage"`
-	TwoHundredDayAverage       float64 `json:"twoHundredDayAverage"`
+	Symbol                      string  `json:"symbol"`
+	ShortName                   string  `json:"shortName"`
+	LongName                    string  `json:"longName"`
+	Currency                    string  `json:"currency"`
+	Exchange                    string  `json:"exchange"`
+	FullExchangeName            string  `json:"fullExchangeName"`
+	QuoteType                   string  `json:"quoteType"`
+	MarketState                 string  `json:"marketState"`
+	RegularMarketPrice          float64 `json:"regularMarketPrice"`
+	RegularMarketChange         float64 `json:"regularMarketChange"`
+	RegularMarketChangePercent  float64 `json:"regularMarketChangePercent"`
+	RegularMarketVolume         int64   `json:"regularMarketVolume"`
+	RegularMarketOpen           float64 `json:"regularMarketOpen"`
+	RegularMarketDayHigh        float64 `json:"regularMarketDayHigh"`
+	RegularMarketDayLow         float64 `json:"regularMarketDayLow"`
+	RegularMarketPreviousClose  float64 `json:"regularMarketPreviousClose"`
+	MarketCap                   int64   `json:"marketCap"`
+	TrailingPE                  float64 `json:"trailingPE"`
+	ForwardPE                   float64 `json:"forwardPE"`
+	FiftyTwoWeekLow             float64 `json:"fiftyTwoWeekLow"`
+	FiftyTwoWeekHigh            float64 `json:"fiftyTwoWeekHigh"`
+	FiftyDayAverage             float64 `json:"fiftyDayAverage"`
+	TwoHundredDayAverage        float64 `json:"twoHundredDayAverage"`
 	TrailingAnnualDividendYield float64 `json:"trailingAnnualDividendYield"`
 }
 
 // GetBulkQuotes fetches quotes for multiple symbols in a single API call.
-func (c *Client) GetBulkQuotes(symbols []string) ([]BulkQuoteResult, error) {
+func (c *Client) GetBulkQuotes(ctx context.Context, symbols []string) ([]BulkQuoteResult, error) {
 	if len(symbols) == 0 {
 		return nil, fmt.Errorf("at least one symbol is required")
 	}
@@ -56,7 +57,7 @@ func (c *Client) GetBulkQuotes(symbols []string) ([]BulkQuoteResult, error) {
 	}
 
 	var resp BulkQuoteResponse
-	if err := c.GetJSON("/v7/finance/quote", params, true, &resp); err != nil {
+	if err := c.GetJSON(ctx, "/v7/finance/quote", params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get bulk quotes: %w", err)
 	}
 

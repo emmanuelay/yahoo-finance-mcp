@@ -68,6 +68,67 @@ cd yahoo-finance-mcp
 make build
 ```
 
+## Usage as a Go package
+
+The `yahoo` package is a standalone client with no dependency on MCP. It
+imports only the standard library, so you can use it in your own Go code
+without pulling in the server.
+
+```sh
+go get github.com/emmanuelay/yahoo-finance-mcp/yahoo
+```
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/emmanuelay/yahoo-finance-mcp/yahoo"
+)
+
+func main() {
+	client := yahoo.NewClient()
+	ctx := context.Background()
+
+	price, detail, err := client.GetQuote(ctx, "AAPL")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s %.2f %s (P/E %.1f)\n",
+		price.Symbol, price.RegularMarketPrice.Raw, price.Currency, detail.TrailingPE.Raw)
+
+	chart, err := client.GetChart(ctx, "VOLV-B.ST", "5d", "1d")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(len(chart.Timestamps), "bars in", chart.Meta.ExchangeTimezoneName)
+}
+```
+
+Every tool in the table above has a matching method on `Client`, all taking a
+`context.Context` first. Authentication (Yahoo's cookie and crumb handshake)
+happens lazily on the first call that needs it and is retried once on a
+401 or 403. Requests have a 30 second timeout by default.
+
+To supply your own transport, proxy or timeout, pass an `http.Client`:
+
+```go
+client := yahoo.NewClientWithHTTP(&http.Client{
+	Timeout: 10 * time.Second,
+	Jar:     jar, // a cookie jar is required for the crumb handshake
+})
+```
+
+For endpoints the package does not wrap, `Get`, `GetJSON`, `GetAbsolute`
+and `GetAbsoluteJSON` are the low-level request methods the typed methods
+are built on.
+
+The full API is on [pkg.go.dev](https://pkg.go.dev/github.com/emmanuelay/yahoo-finance-mcp/yahoo).
+The module is at v0, so the API may change between releases.
+
 ## Enable in Anthropics Claude Desktop / Claude Code
 
 ### Claude Desktop

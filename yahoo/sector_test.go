@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -48,7 +49,7 @@ func TestGetSector_Success(t *testing.T) {
 		}`), nil
 	})
 
-	data, err := client.GetSector("technology")
+	data, err := client.GetSector(context.Background(), "technology")
 	if err != nil {
 		t.Fatalf("GetSector() error: %v", err)
 	}
@@ -96,7 +97,7 @@ func TestGetSector_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetSector("technology")
+	_, err := client.GetSector(context.Background(), "technology")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}

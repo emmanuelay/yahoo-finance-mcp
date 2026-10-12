@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -36,7 +37,7 @@ func TestGetQuote_Success(t *testing.T) {
 		}`), nil
 	})
 
-	price, detail, err := client.GetQuote("AAPL")
+	price, detail, err := client.GetQuote(context.Background(), "AAPL")
 	if err != nil {
 		t.Fatalf("GetQuote() error: %v", err)
 	}
@@ -68,7 +69,7 @@ func TestGetQuote_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, _, err := client.GetQuote("XYZ123")
+	_, _, err := client.GetQuote(context.Background(), "XYZ123")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -86,7 +87,7 @@ func TestGetQuote_EmptyResults(t *testing.T) {
 		}`), nil
 	})
 
-	_, _, err := client.GetQuote("UNKNOWN")
+	_, _, err := client.GetQuote(context.Background(), "UNKNOWN")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}
@@ -108,5 +109,5 @@ func TestGetQuote_RequestModules(t *testing.T) {
 		}`), nil
 	})
 
-	client.GetQuote("AAPL")
+	client.GetQuote(context.Background(), "AAPL")
 }

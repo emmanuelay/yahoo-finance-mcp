@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -56,7 +57,7 @@ func TestGetIndustry_Success(t *testing.T) {
 		}`), nil
 	})
 
-	data, err := client.GetIndustry("consumer-electronics")
+	data, err := client.GetIndustry(context.Background(), "consumer-electronics")
 	if err != nil {
 		t.Fatalf("GetIndustry() error: %v", err)
 	}
@@ -118,7 +119,7 @@ func TestGetIndustry_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetIndustry("consumer-electronics")
+	_, err := client.GetIndustry(context.Background(), "consumer-electronics")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
 	}
@@ -132,5 +133,5 @@ func TestGetIndustry_PathEscaping(t *testing.T) {
 		return jsonResponse(200, `{"data": {}}`), nil
 	})
 
-	client.GetIndustry("software-application")
+	client.GetIndustry(context.Background(), "software-application")
 }

@@ -1,13 +1,14 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
 
 // GetOptions fetches the options chain for a symbol.
 // If expiration is empty, returns the nearest expiration.
-func (c *Client) GetOptions(symbol, expiration string) (*OptionsResult, error) {
+func (c *Client) GetOptions(ctx context.Context, symbol, expiration string) (*OptionsResult, error) {
 	params := url.Values{}
 	if expiration != "" {
 		params.Set("date", expiration)
@@ -15,7 +16,7 @@ func (c *Client) GetOptions(symbol, expiration string) (*OptionsResult, error) {
 
 	var resp OptionsResponse
 	path := fmt.Sprintf("/v7/finance/options/%s", url.PathEscape(symbol))
-	if err := c.GetJSON(path, params, true, &resp); err != nil {
+	if err := c.GetJSON(ctx, path, params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get options: %w", err)
 	}
 

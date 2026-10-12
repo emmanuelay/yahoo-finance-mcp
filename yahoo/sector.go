@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
@@ -13,34 +14,29 @@ type SectorResponse struct {
 }
 
 type SectorData struct {
-	Name         string              `json:"name"`
-	Symbol       string              `json:"symbol"`
-	Overview     SectorOverview      `json:"overview"`
-	TopCompanies []TopCompany        `json:"topCompanies"`
-	TopETFs      []TopFund           `json:"topETFs"`
-	TopMutualFunds []TopFund         `json:"topMutualFunds"`
-	Industries   []IndustryListItem  `json:"industries"`
+	Name           string             `json:"name"`
+	Symbol         string             `json:"symbol"`
+	Overview       SectorOverview     `json:"overview"`
+	TopCompanies   []TopCompany       `json:"topCompanies"`
+	TopETFs        []TopFund          `json:"topETFs"`
+	TopMutualFunds []TopFund          `json:"topMutualFunds"`
+	Industries     []IndustryListItem `json:"industries"`
 }
 
 type SectorOverview struct {
 	CompaniesCount  int        `json:"companiesCount"`
-	MarketCap       RawFmt     `json:"marketCap"`
+	MarketCap       YahooValue `json:"marketCap"`
 	Description     string     `json:"description"`
 	IndustriesCount int        `json:"industriesCount"`
-	MarketWeight    RawFmt     `json:"marketWeight"`
-	EmployeeCount   RawFmt     `json:"employeeCount"`
-}
-
-type RawFmt struct {
-	Raw float64 `json:"raw"`
-	Fmt string  `json:"fmt"`
+	MarketWeight    YahooValue `json:"marketWeight"`
+	EmployeeCount   YahooValue `json:"employeeCount"`
 }
 
 type TopCompany struct {
-	Symbol       string `json:"symbol"`
-	Name         string `json:"name"`
-	Rating       any    `json:"rating"`
-	MarketWeight RawFmt `json:"marketWeight"`
+	Symbol       string     `json:"symbol"`
+	Name         string     `json:"name"`
+	Rating       any        `json:"rating"`
+	MarketWeight YahooValue `json:"marketWeight"`
 }
 
 type TopFund struct {
@@ -49,10 +45,10 @@ type TopFund struct {
 }
 
 type IndustryListItem struct {
-	Key          string `json:"key"`
-	Name         string `json:"name"`
-	Symbol       string `json:"symbol"`
-	MarketWeight RawFmt `json:"marketWeight"`
+	Key          string     `json:"key"`
+	Name         string     `json:"name"`
+	Symbol       string     `json:"symbol"`
+	MarketWeight YahooValue `json:"marketWeight"`
 }
 
 // ValidSectorKeys lists all recognized sector keys.
@@ -71,7 +67,7 @@ var ValidSectorKeys = []string{
 }
 
 // GetSector fetches sector data by key (e.g., "technology", "healthcare").
-func (c *Client) GetSector(key string) (*SectorData, error) {
+func (c *Client) GetSector(ctx context.Context, key string) (*SectorData, error) {
 	params := url.Values{
 		"formatted":   {"true"},
 		"withReturns": {"true"},
@@ -82,7 +78,7 @@ func (c *Client) GetSector(key string) (*SectorData, error) {
 	apiURL := fmt.Sprintf("%s/sectors/%s", query1BaseURL, url.PathEscape(key))
 
 	var resp SectorResponse
-	if err := c.GetAbsoluteJSON(apiURL, params, &resp); err != nil {
+	if err := c.GetAbsoluteJSON(ctx, apiURL, params, true, &resp); err != nil {
 		return nil, fmt.Errorf("get sector %q: %w", key, err)
 	}
 

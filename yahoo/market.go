@@ -1,7 +1,7 @@
 package yahoo
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/url"
 )
@@ -61,7 +61,7 @@ var ValidMarketKeys = []string{
 }
 
 // GetMarketSummary fetches market summary (indices/benchmarks) for a market.
-func (c *Client) GetMarketSummary(market string) ([]MarketSummaryItem, error) {
+func (c *Client) GetMarketSummary(ctx context.Context, market string) ([]MarketSummaryItem, error) {
 	params := url.Values{
 		"fields":    {"shortName,regularMarketPrice,regularMarketChange,regularMarketChangePercent"},
 		"formatted": {"false"},
@@ -69,18 +69,8 @@ func (c *Client) GetMarketSummary(market string) ([]MarketSummaryItem, error) {
 		"market":    {market},
 	}
 
-	fullURL := marketBaseURL + "/quote/marketSummary?" + params.Encode()
-
-	body, statusCode, err := c.doGet(fullURL)
-	if err != nil {
-		return nil, fmt.Errorf("get market summary %q: %w", market, err)
-	}
-	if statusCode != 200 {
-		return nil, fmt.Errorf("get market summary %q: status %d", market, statusCode)
-	}
-
 	var resp MarketSummaryResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
+	if err := c.GetAbsoluteJSON(ctx, marketBaseURL+"/quote/marketSummary", params, false, &resp); err != nil {
 		return nil, fmt.Errorf("get market summary %q: %w", market, err)
 	}
 
@@ -92,7 +82,7 @@ func (c *Client) GetMarketSummary(market string) ([]MarketSummaryItem, error) {
 }
 
 // GetMarketStatus fetches market open/close times and timezone for a market.
-func (c *Client) GetMarketStatus(market string) ([]MarketTimeGroup, error) {
+func (c *Client) GetMarketStatus(ctx context.Context, market string) ([]MarketTimeGroup, error) {
 	params := url.Values{
 		"formatted": {"true"},
 		"key":       {"finance"},
@@ -100,18 +90,8 @@ func (c *Client) GetMarketStatus(market string) ([]MarketTimeGroup, error) {
 		"market":    {market},
 	}
 
-	fullURL := marketBaseURL + "/markettime?" + params.Encode()
-
-	body, statusCode, err := c.doGet(fullURL)
-	if err != nil {
-		return nil, fmt.Errorf("get market status %q: %w", market, err)
-	}
-	if statusCode != 200 {
-		return nil, fmt.Errorf("get market status %q: status %d", market, statusCode)
-	}
-
 	var resp MarketStatusResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
+	if err := c.GetAbsoluteJSON(ctx, marketBaseURL+"/markettime", params, false, &resp); err != nil {
 		return nil, fmt.Errorf("get market status %q: %w", market, err)
 	}
 

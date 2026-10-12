@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -21,7 +22,10 @@ func TestGetChart_Success(t *testing.T) {
 						"regularMarketPrice": 178.72,
 						"previousClose": 176.57,
 						"dataGranularity": "1d",
-						"range": "1mo"
+						"range": "1mo",
+						"exchangeTimezoneName": "America/New_York",
+						"timezone": "EST",
+						"gmtoffset": -18000
 					},
 					"timestamp": [1700000000, 1700086400, 1700172800],
 					"indicators": {
@@ -41,13 +45,16 @@ func TestGetChart_Success(t *testing.T) {
 		}`), nil
 	})
 
-	result, err := client.GetChart("AAPL", "1mo", "1d")
+	result, err := client.GetChart(context.Background(), "AAPL", "1mo", "1d")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
 
 	if result.Meta.Symbol != "AAPL" {
 		t.Errorf("meta.Symbol = %q, want %q", result.Meta.Symbol, "AAPL")
+	}
+	if result.Meta.ExchangeTimezoneName != "America/New_York" || result.Meta.GMTOffset != -18000 {
+		t.Errorf("timezone = %q/%d, want America/New_York/-18000", result.Meta.ExchangeTimezoneName, result.Meta.GMTOffset)
 	}
 	if result.Meta.Currency != "USD" {
 		t.Errorf("meta.Currency = %q, want %q", result.Meta.Currency, "USD")
@@ -80,7 +87,7 @@ func TestGetChart_Defaults(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("AAPL", "", "")
+	_, err := client.GetChart(context.Background(), "AAPL", "", "")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
@@ -103,7 +110,7 @@ func TestGetChart_CustomParams(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("AAPL", "5d", "15m")
+	_, err := client.GetChart(context.Background(), "AAPL", "5d", "15m")
 	if err != nil {
 		t.Fatalf("GetChart() error: %v", err)
 	}
@@ -119,7 +126,7 @@ func TestGetChart_YahooError(t *testing.T) {
 		}`), nil
 	})
 
-	_, err := client.GetChart("INVALID", "1mo", "1d")
+	_, err := client.GetChart(context.Background(), "INVALID", "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for yahoo error response")
 	}
@@ -133,7 +140,7 @@ func TestGetChart_EmptyResults(t *testing.T) {
 		return jsonResponse(200, `{"chart": {"result": []}}`), nil
 	})
 
-	_, err := client.GetChart("UNKNOWN", "1mo", "1d")
+	_, err := client.GetChart(context.Background(), "UNKNOWN", "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for empty results")
 	}

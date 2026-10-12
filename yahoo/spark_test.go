@@ -1,6 +1,7 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -40,7 +41,7 @@ func TestGetBulkSpark_Success(t *testing.T) {
 		}`), nil
 	})
 
-	resp, err := client.GetBulkSpark([]string{"AAPL", "MSFT"}, "5d", "1h")
+	resp, err := client.GetBulkSpark(context.Background(), []string{"AAPL", "MSFT"}, "5d", "1h")
 	if err != nil {
 		t.Fatalf("GetBulkSpark() error: %v", err)
 	}
@@ -89,7 +90,7 @@ func TestGetBulkSpark_Defaults(t *testing.T) {
 		}`), nil
 	})
 
-	resp, err := client.GetBulkSpark([]string{"TSLA"}, "", "")
+	resp, err := client.GetBulkSpark(context.Background(), []string{"TSLA"}, "", "")
 	if err != nil {
 		t.Fatalf("GetBulkSpark() error: %v", err)
 	}
@@ -104,7 +105,7 @@ func TestGetBulkSpark_EmptySymbols(t *testing.T) {
 		return nil, nil
 	})
 
-	_, err := client.GetBulkSpark([]string{}, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), []string{}, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for empty symbols")
 	}
@@ -124,7 +125,7 @@ func TestGetBulkSpark_TooManySymbols(t *testing.T) {
 		symbols[i] = fmt.Sprintf("SYM%d", i)
 	}
 
-	_, err := client.GetBulkSpark(symbols, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), symbols, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for too many symbols")
 	}
@@ -138,8 +139,31 @@ func TestGetBulkSpark_HTTPError(t *testing.T) {
 		return jsonResponse(500, `Internal Server Error`), nil
 	})
 
-	_, err := client.GetBulkSpark([]string{"AAPL"}, "1mo", "1d")
+	_, err := client.GetBulkSpark(context.Background(), []string{"AAPL"}, "1mo", "1d")
 	if err == nil {
 		t.Fatal("expected error for HTTP 500")
+	}
+}
+
+func TestGetBulkSpark_NullClose(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(200, `{
+			"AAPL": {"symbol": "AAPL", "timestamp": [1700000000, 1700003600, 1700007200], "close": [178.5, null, 178.72], "chartPreviousClose": 176.57, "dataGranularity": 3600}
+		}`), nil
+	})
+
+	resp, err := client.GetBulkSpark(context.Background(), []string{"AAPL"}, "1d", "1h")
+	if err != nil {
+		t.Fatalf("GetBulkSpark() error: %v", err)
+	}
+	aapl := resp["AAPL"]
+	if len(aapl.Close) != 3 {
+		t.Fatalf("Close length = %d, want 3", len(aapl.Close))
+	}
+	if aapl.Close[0] == nil || *aapl.Close[0] != 178.5 {
+		t.Errorf("Close[0] = %v, want 178.5", aapl.Close[0])
+	}
+	if aapl.Close[1] != nil {
+		t.Errorf("Close[1] = %v, want nil for JSON null", *aapl.Close[1])
 	}
 }

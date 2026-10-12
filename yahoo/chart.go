@@ -1,12 +1,13 @@
 package yahoo
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 )
 
 // GetChart fetches historical OHLCV chart data for a symbol.
-func (c *Client) GetChart(symbol, rangeStr, interval string) (*ChartResult, error) {
+func (c *Client) GetChart(ctx context.Context, symbol, rangeStr, interval string) (*ChartResult, error) {
 	if rangeStr == "" {
 		rangeStr = "1mo"
 	}
@@ -21,7 +22,7 @@ func (c *Client) GetChart(symbol, rangeStr, interval string) (*ChartResult, erro
 
 	var resp ChartResponse
 	path := fmt.Sprintf("/v8/finance/chart/%s", url.PathEscape(symbol))
-	if err := c.GetJSON(path, params, false, &resp); err != nil {
+	if err := c.GetJSON(ctx, path, params, false, &resp); err != nil {
 		return nil, fmt.Errorf("get chart: %w", err)
 	}
 
