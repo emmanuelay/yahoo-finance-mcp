@@ -21,12 +21,15 @@ type YahooError struct {
 	Description string `json:"description"`
 }
 
-// YahooValue represents a Yahoo Finance value wrapper (raw + fmt).
+// YahooValue is Yahoo's numeric wrapper: the raw number plus a
+// pre-formatted display string (e.g. 2.8e12 and "2.80T"). It is used by
+// the quoteSummary, sector and industry endpoints.
 type YahooValue struct {
 	Raw float64 `json:"raw"`
 	Fmt string  `json:"fmt"`
 }
 
+// YahooLongValue is YahooValue for integer quantities such as volume.
 type YahooLongValue struct {
 	Raw int64  `json:"raw"`
 	Fmt string `json:"fmt"`
@@ -240,24 +243,4 @@ type OptionContract struct {
 	ImpliedVolatility float64 `json:"impliedVolatility"`
 	InTheMoney        bool    `json:"inTheMoney"`
 	Expiration        int64   `json:"expiration"`
-}
-
-// TimeseriesResponse from fundamentals-timeseries endpoint.
-type TimeseriesResponse struct {
-	Timeseries struct {
-		Result []TimeseriesResult `json:"result"`
-		Error  *YahooError        `json:"error"`
-	} `json:"timeseries"`
-}
-
-type TimeseriesResult struct {
-	Meta       TimeseriesMeta           `json:"meta"`
-	Timestamp  []int64                  `json:"timestamp"`
-	Type       string                   // populated from the key name
-	DataPoints []map[string]interface{} // populated from dynamic keys
-}
-
-type TimeseriesMeta struct {
-	Symbol []string `json:"symbol"`
-	Type   []string `json:"type"`
 }

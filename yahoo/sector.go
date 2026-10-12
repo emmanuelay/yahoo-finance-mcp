@@ -24,24 +24,19 @@ type SectorData struct {
 }
 
 type SectorOverview struct {
-	CompaniesCount  int    `json:"companiesCount"`
-	MarketCap       RawFmt `json:"marketCap"`
-	Description     string `json:"description"`
-	IndustriesCount int    `json:"industriesCount"`
-	MarketWeight    RawFmt `json:"marketWeight"`
-	EmployeeCount   RawFmt `json:"employeeCount"`
-}
-
-type RawFmt struct {
-	Raw float64 `json:"raw"`
-	Fmt string  `json:"fmt"`
+	CompaniesCount  int        `json:"companiesCount"`
+	MarketCap       YahooValue `json:"marketCap"`
+	Description     string     `json:"description"`
+	IndustriesCount int        `json:"industriesCount"`
+	MarketWeight    YahooValue `json:"marketWeight"`
+	EmployeeCount   YahooValue `json:"employeeCount"`
 }
 
 type TopCompany struct {
-	Symbol       string `json:"symbol"`
-	Name         string `json:"name"`
-	Rating       any    `json:"rating"`
-	MarketWeight RawFmt `json:"marketWeight"`
+	Symbol       string     `json:"symbol"`
+	Name         string     `json:"name"`
+	Rating       any        `json:"rating"`
+	MarketWeight YahooValue `json:"marketWeight"`
 }
 
 type TopFund struct {
@@ -50,10 +45,10 @@ type TopFund struct {
 }
 
 type IndustryListItem struct {
-	Key          string `json:"key"`
-	Name         string `json:"name"`
-	Symbol       string `json:"symbol"`
-	MarketWeight RawFmt `json:"marketWeight"`
+	Key          string     `json:"key"`
+	Name         string     `json:"name"`
+	Symbol       string     `json:"symbol"`
+	MarketWeight YahooValue `json:"marketWeight"`
 }
 
 // ValidSectorKeys lists all recognized sector keys.

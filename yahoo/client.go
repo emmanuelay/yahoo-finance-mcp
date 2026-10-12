@@ -115,18 +115,22 @@ func (c *Client) getCrumb() string {
 	return c.crumb
 }
 
-// Get performs a GET request to a path on the default Yahoo Finance host.
-// If needsCrumb is true, the client authenticates first and appends the crumb.
+// Get is the low-level request method for a path on the default Yahoo
+// Finance host (query2). Most callers want the typed methods such as
+// GetQuote; use Get to reach an endpoint this package does not wrap.
+// If needsCrumb is true, the client authenticates first and appends the
+// crumb, which the quoteSummary, quote, options and fundamentals
+// endpoints require and the chart, spark and search endpoints do not.
 func (c *Client) Get(ctx context.Context, path string, params url.Values, needsCrumb bool) ([]byte, error) {
 	return c.GetAbsolute(ctx, baseURL+path, params, needsCrumb)
 }
 
-// GetJSON performs a GET on the default host and unmarshals the JSON response into v.
+// GetJSON is Get followed by json.Unmarshal into v.
 func (c *Client) GetJSON(ctx context.Context, path string, params url.Values, needsCrumb bool, v any) error {
 	return c.GetAbsoluteJSON(ctx, baseURL+path, params, needsCrumb, v)
 }
 
-// GetAbsoluteJSON performs a GET on an absolute URL and unmarshals the JSON response into v.
+// GetAbsoluteJSON is GetAbsolute followed by json.Unmarshal into v.
 func (c *Client) GetAbsoluteJSON(ctx context.Context, absoluteURL string, params url.Values, needsCrumb bool, v any) error {
 	body, err := c.GetAbsolute(ctx, absoluteURL, params, needsCrumb)
 	if err != nil {
@@ -138,8 +142,9 @@ func (c *Client) GetAbsoluteJSON(ctx context.Context, absoluteURL string, params
 	return nil
 }
 
-// GetAbsolute performs a GET request to an absolute URL. It is the single
-// request path shared by every endpoint: it attaches the crumb when needed,
+// GetAbsolute is the low-level request method for an absolute URL, for
+// endpoints hosted outside query2 (e.g. query1). It is the single request
+// path shared by every typed method: it attaches the crumb when needed,
 // re-authenticates once on 401/403, and rejects any non-200 response.
 func (c *Client) GetAbsolute(ctx context.Context, absoluteURL string, params url.Values, needsCrumb bool) ([]byte, error) {
 	if needsCrumb {

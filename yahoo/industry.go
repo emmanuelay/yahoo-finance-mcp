@@ -23,18 +23,18 @@ type IndustryData struct {
 }
 
 type PerformingCompany struct {
-	Symbol      string `json:"symbol"`
-	Name        string `json:"name"`
-	YtdReturn   RawFmt `json:"ytdReturn"`
-	LastPrice   RawFmt `json:"lastPrice"`
-	TargetPrice RawFmt `json:"targetPrice"`
+	Symbol      string     `json:"symbol"`
+	Name        string     `json:"name"`
+	YtdReturn   YahooValue `json:"ytdReturn"`
+	LastPrice   YahooValue `json:"lastPrice"`
+	TargetPrice YahooValue `json:"targetPrice"`
 }
 
 type GrowthCompany struct {
-	Symbol         string `json:"symbol"`
-	Name           string `json:"name"`
-	YtdReturn      RawFmt `json:"ytdReturn"`
-	GrowthEstimate RawFmt `json:"growthEstimate"`
+	Symbol         string     `json:"symbol"`
+	Name           string     `json:"name"`
+	YtdReturn      YahooValue `json:"ytdReturn"`
+	GrowthEstimate YahooValue `json:"growthEstimate"`
 }
 
 // GetIndustry fetches industry data by key (e.g., "consumer-electronics", "semiconductors").
