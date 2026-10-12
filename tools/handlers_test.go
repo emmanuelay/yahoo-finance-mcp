@@ -249,3 +249,174 @@ func TestFormatBulkSpark_UTCHeader(t *testing.T) {
 		t.Errorf("expected 1d granularity label, got:\n%s", out)
 	}
 }
+
+func TestAddSpaces(t *testing.T) {
+	cases := map[string]string{
+		"TotalRevenue":     "Total Revenue",
+		"BasicEPS":         "Basic E P S",
+		"NetIncome":        "Net Income",
+		"x":                "x",
+		"":                 "",
+		"alreadyLowercase": "already Lowercase",
+	}
+	for in, want := range cases {
+		if got := addSpaces(in); got != want {
+			t.Errorf("addSpaces(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestFormatQuote_EdgeCases(t *testing.T) {
+	if out := formatQuote(nil, nil); out != "No price data available" {
+		t.Errorf("nil price = %q", out)
+	}
+
+	pre := &yahoo.PriceData{Symbol: "X", ShortName: "Short", Currency: "EUR", MarketState: "PRE",
+		RegularMarketPrice: yahoo.YahooValue{Raw: 10}, PreMarketPrice: yahoo.YahooValue{Raw: 10.5},
+		PreMarketChange: yahoo.YahooValue{Raw: 0.5}, PreMarketChangePercent: yahoo.YahooValue{Raw: 5}}
+	out := formatQuote(pre, nil)
+	if !strings.Contains(out, "=== X (Short) ===") {
+		t.Errorf("should fall back to ShortName, got:\n%s", out)
+	}
+	if !strings.Contains(out, "--- Pre-Market ---") || !strings.Contains(out, "€10.50") {
+		t.Errorf("expected pre-market block in EUR, got:\n%s", out)
+	}
+	if strings.Contains(out, "Market Cap") || strings.Contains(out, "P/E") {
+		t.Errorf("zero-valued optional fields should be omitted, got:\n%s", out)
+	}
+
+	post := &yahoo.PriceData{Symbol: "Y", MarketState: "POST", PostMarketPrice: yahoo.YahooValue{Raw: 1}}
+	if out := formatQuote(post, &yahoo.SummaryDetailData{}); !strings.Contains(out, "--- Post-Market ---") {
+		t.Errorf("expected post-market block, got:\n%s", out)
+	}
+}
+
+func TestFormatSearch_Empty(t *testing.T) {
+	if out := formatSearch(&yahoo.SearchResponse{}); !strings.Contains(out, "No results found") {
+		t.Errorf("expected empty marker, got:\n%s", out)
+	}
+}
+
+func TestFormatFinancials_Empty(t *testing.T) {
+	out := formatFinancials("AAPL", "cashflow", true, nil)
+	if !strings.Contains(out, "=== AAPL Quarterly Financial Data (Cashflow) ===") || !strings.Contains(out, "No financial data available") {
+		t.Errorf("unexpected output:\n%s", out)
+	}
+}
+
+func TestFormatRecommendations_Empty(t *testing.T) {
+	if out := formatRecommendations("X", nil); !strings.Contains(out, "No recommendation data available") {
+		t.Errorf("nil trend:\n%s", out)
+	}
+	if out := formatRecommendations("X", &yahoo.RecommendationTrendData{}); !strings.Contains(out, "No recommendation data available") {
+		t.Errorf("empty trend:\n%s", out)
+	}
+	// All-zero current period: table prints but no consensus line.
+	zero := &yahoo.RecommendationTrendData{Trend: []yahoo.RecommendationTrend{{Period: "0m"}}}
+	if out := formatRecommendations("X", zero); strings.Contains(out, "consensus") {
+		t.Errorf("no consensus expected for zero analysts:\n%s", out)
+	}
+}
+
+func TestFormatProfile_Minimal(t *testing.T) {
+	out := formatProfile("X", nil, nil)
+	if !strings.Contains(out, "=== X (X) Company Profile ===") || !strings.Contains(out, "No profile data available") {
+		t.Errorf("nil profile:\n%s", out)
+	}
+
+	// Fewer than five officers: no "and N more" line.
+	p := &yahoo.AssetProfileData{CompanyOfficers: []yahoo.CompanyOfficer{{Name: "A", Title: "CEO"}}}
+	out = formatProfile("X", p, &yahoo.QuoteTypeData{LongName: "Xcorp"})
+	if !strings.Contains(out, "=== Xcorp (X)") || !strings.Contains(out, "- A: CEO") || strings.Contains(out, "more") {
+		t.Errorf("single officer:\n%s", out)
+	}
+	if strings.Contains(out, "Location:") {
+		t.Errorf("no address fields should mean no Location line:\n%s", out)
+	}
+}
+
+func TestFormatSectorIndustry_Truncation(t *testing.T) {
+	var companies []yahoo.TopCompany
+	for i := 0; i < 12; i++ {
+		companies = append(companies, yahoo.TopCompany{Symbol: "S", Name: "N"})
+	}
+	out := formatSector(&yahoo.SectorData{Name: "Tech", TopCompanies: companies})
+	if !strings.Contains(out, "... and 2 more") {
+		t.Errorf("expected top-company truncation, got:\n%s", out)
+	}
+	if strings.Contains(out, "Symbol:") || strings.Contains(out, "Industries ---") {
+		t.Errorf("empty optional sections should be omitted:\n%s", out)
+	}
+
+	var perf []yahoo.PerformingCompany
+	var growth []yahoo.GrowthCompany
+	for i := 0; i < 11; i++ {
+		perf = append(perf, yahoo.PerformingCompany{Symbol: "P"})
+		growth = append(growth, yahoo.GrowthCompany{Symbol: "G"})
+	}
+	out = formatIndustry(&yahoo.IndustryData{Name: "I", TopCompanies: companies, TopPerformingCompanies: perf, TopGrowthCompanies: growth})
+	if strings.Count(out, "... and 1 more") != 2 || !strings.Contains(out, "... and 2 more") {
+		t.Errorf("expected truncation lines for all three lists, got:\n%s", out)
+	}
+}
+
+func TestFormatMarket_Empty(t *testing.T) {
+	if out := formatMarketSummary("US", nil); !strings.Contains(out, "No market data available") {
+		t.Errorf("summary:\n%s", out)
+	}
+	if out := formatMarketStatus("US", nil); !strings.Contains(out, "No market time data available") {
+		t.Errorf("status:\n%s", out)
+	}
+	if out := formatBulkQuotes(nil); out != "No quotes returned" {
+		t.Errorf("bulk quotes = %q", out)
+	}
+	if out := formatBulkSpark(nil, nil); out != "No spark data returned" {
+		t.Errorf("bulk spark = %q", out)
+	}
+}
+
+func TestFormatBulkSpark_Downsamples(t *testing.T) {
+	ts := make([]int64, 120)
+	cl := make([]*float64, 120)
+	for i := range ts {
+		ts[i] = 1700000000 + int64(i)*3600
+		v := float64(i)
+		cl[i] = &v
+	}
+	out := formatBulkSpark([]string{"X"}, yahoo.SparkResponse{"X": {Symbol: "X", Timestamps: ts, Close: cl, DataGranularity: 3600}})
+	if !strings.Contains(out, "(50 of 120 data points)") {
+		t.Errorf("expected downsampling footer, got:\n%s", out)
+	}
+}
+
+func TestTruncate(t *testing.T) {
+	cases := []struct {
+		in   string
+		max  int
+		want string
+	}{
+		{"short", 24, "short"},
+		{"exactly twenty-four chars", 25, "exactly twenty-four chars"},
+		{"Volvo, AB ser. B with a very long name", 24, "Volvo, AB ser. B with.."},
+		{"Sonos Inc. with an unnecessarily long name", 24, "Sonos Inc. with an unn.."},
+		// Multibyte: 30 runes but 60 bytes; byte slicing would split a rune.
+		{strings.Repeat("å", 30), 10, strings.Repeat("å", 8) + ".."},
+	}
+	for _, c := range cases {
+		if got := truncate(c.in, c.max); got != c.want {
+			t.Errorf("truncate(%q, %d) = %q, want %q", c.in, c.max, got, c.want)
+		}
+	}
+}
+
+func TestFmtSigned(t *testing.T) {
+	if got := fmtSigned(1.6); got != "+1.60" {
+		t.Errorf("fmtSigned(1.6) = %q", got)
+	}
+	if got := fmtSigned(-1.28); got != "-1.28" {
+		t.Errorf("fmtSigned(-1.28) = %q", got)
+	}
+	if got := fmtSigned(0); got != "+0.00" {
+		t.Errorf("fmtSigned(0) = %q", got)
+	}
+}

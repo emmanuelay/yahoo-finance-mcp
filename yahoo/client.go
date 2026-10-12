@@ -46,6 +46,13 @@ func NewClient() *Client {
 	}
 }
 
+// NewClientWithHTTP creates a client that sends requests through hc.
+// It exists so callers (and tests) can supply their own transport, cookie
+// jar, or timeout; hc must not be nil.
+func NewClientWithHTTP(hc *http.Client) *Client {
+	return &Client{httpClient: hc}
+}
+
 // authenticate performs the cookie/crumb flow.
 func (c *Client) authenticate(ctx context.Context) error {
 	c.mu.Lock()
