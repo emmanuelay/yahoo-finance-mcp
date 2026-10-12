@@ -15,11 +15,11 @@ type SparkResponse map[string]SparkResult
 
 // SparkResult contains spark data for a single symbol.
 type SparkResult struct {
-	Symbol             string    `json:"symbol"`
-	Timestamps         []int64   `json:"timestamp"`
-	Close              []float64 `json:"close"`
-	ChartPreviousClose float64   `json:"chartPreviousClose"`
-	DataGranularity    int       `json:"dataGranularity"`
+	Symbol             string     `json:"symbol"`
+	Timestamps         []int64    `json:"timestamp"`
+	Close              []*float64 `json:"close"`
+	ChartPreviousClose float64    `json:"chartPreviousClose"`
+	DataGranularity    int        `json:"dataGranularity"`
 }
 
 // GetBulkSpark fetches simplified chart data for multiple symbols in a single call.

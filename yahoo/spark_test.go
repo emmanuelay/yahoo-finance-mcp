@@ -144,3 +144,26 @@ func TestGetBulkSpark_HTTPError(t *testing.T) {
 		t.Fatal("expected error for HTTP 500")
 	}
 }
+
+func TestGetBulkSpark_NullClose(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(200, `{
+			"AAPL": {"symbol": "AAPL", "timestamp": [1700000000, 1700003600, 1700007200], "close": [178.5, null, 178.72], "chartPreviousClose": 176.57, "dataGranularity": 3600}
+		}`), nil
+	})
+
+	resp, err := client.GetBulkSpark(context.Background(), []string{"AAPL"}, "1d", "1h")
+	if err != nil {
+		t.Fatalf("GetBulkSpark() error: %v", err)
+	}
+	aapl := resp["AAPL"]
+	if len(aapl.Close) != 3 {
+		t.Fatalf("Close length = %d, want 3", len(aapl.Close))
+	}
+	if aapl.Close[0] == nil || *aapl.Close[0] != 178.5 {
+		t.Errorf("Close[0] = %v, want 178.5", aapl.Close[0])
+	}
+	if aapl.Close[1] != nil {
+		t.Errorf("Close[1] = %v, want nil for JSON null", *aapl.Close[1])
+	}
+}

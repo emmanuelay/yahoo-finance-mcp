@@ -352,16 +352,17 @@ func formatBulkSpark(symbolOrder []string, results yahoo.SparkResponse) string {
 		fmt.Fprintf(&b, "%-20s %10s %10s\n", "Date", "Close", "Change%")
 		for i := 0; i < n; i += step {
 			ts := time.Unix(sr.Timestamps[i], 0)
-			close := sr.Close[i]
-			chgPct := 0.0
-			if sr.ChartPreviousClose > 0 {
-				chgPct = (close - sr.ChartPreviousClose) / sr.ChartPreviousClose * 100
+			closeStr := fmtOptFloat(sr.Close, i)
+			chgStr := "N/A"
+			if i < len(sr.Close) && sr.Close[i] != nil && sr.ChartPreviousClose > 0 {
+				chgPct := (*sr.Close[i] - sr.ChartPreviousClose) / sr.ChartPreviousClose * 100
+				sign := "+"
+				if chgPct < 0 {
+					sign = ""
+				}
+				chgStr = fmt.Sprintf("%s%.2f%%", sign, chgPct)
 			}
-			sign := "+"
-			if chgPct < 0 {
-				sign = ""
-			}
-			fmt.Fprintf(&b, "%-20s %10.2f %s%8.2f%%\n", ts.Format("2006-01-02 15:04"), close, sign, chgPct)
+			fmt.Fprintf(&b, "%-20s %10s %10s\n", ts.Format("2006-01-02 15:04"), closeStr, chgStr)
 		}
 		fmt.Fprintf(&b, "(%d of %d data points)\n", min(n, 50), n)
 	}
