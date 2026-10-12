@@ -35,6 +35,13 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 
+release:
+  header: |
+    ## Which file do I need?
+
+    - **Claude Desktop:** download the `.mcpb` file for your platform and install it via *Settings → Extensions*. On Windows that is `win32_amd64` (or `win32_arm64`). Do not use the *Upload local plugin* dialog; it is for Claude plugins, not MCP extensions.
+    - **Homebrew / manual install:** the `.tar.gz` and `.zip` archives contain just the binary. See the [README](https://github.com/emmanuelay/yahoo-finance-mcp#install) for configuring Claude Desktop or Claude Code with it.
+
 changelog:
   sort: asc
   filters:
