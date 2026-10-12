@@ -286,21 +286,13 @@ func formatBulkQuotes(results []yahoo.BulkQuoteResult) string {
 		if name == "" {
 			name = q.ShortName
 		}
-		if len(name) > 24 {
-			name = name[:22] + ".."
-		}
 
-		changeSign := "+"
-		if q.RegularMarketChange < 0 {
-			changeSign = ""
-		}
-
-		fmt.Fprintf(&b, "%-8s %-25s %10.2f %s%9.2f %s%6.2f%% %14s %12s\n",
+		fmt.Fprintf(&b, "%-8s %-25s %10.2f %10s %8s %14s %12s\n",
 			q.Symbol,
-			name,
+			truncate(name, 24),
 			q.RegularMarketPrice,
-			changeSign, q.RegularMarketChange,
-			changeSign, q.RegularMarketChangePercent,
+			fmtSigned(q.RegularMarketChange),
+			fmtSigned(q.RegularMarketChangePercent)+"%",
 			fmtInt(q.RegularMarketVolume),
 			fmtLargeNumber(float64(q.MarketCap), q.Currency),
 		)
@@ -862,12 +854,8 @@ func formatIndustry(data *yahoo.IndustryData) string {
 				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopPerformingCompanies)-10)
 				break
 			}
-			name := c.Name
-			if len(name) > 24 {
-				name = name[:22] + ".."
-			}
 			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %10.2f %12.2f\n",
-				c.Symbol, name, c.YtdReturn.Raw*100, c.LastPrice.Raw, c.TargetPrice.Raw)
+				c.Symbol, truncate(c.Name, 24), c.YtdReturn.Raw*100, c.LastPrice.Raw, c.TargetPrice.Raw)
 		}
 	}
 
@@ -879,12 +867,8 @@ func formatIndustry(data *yahoo.IndustryData) string {
 				fmt.Fprintf(&b, "  ... and %d more\n", len(data.TopGrowthCompanies)-10)
 				break
 			}
-			name := c.Name
-			if len(name) > 24 {
-				name = name[:22] + ".."
-			}
 			fmt.Fprintf(&b, "  %-8s %-25s %9.1f%% %11.1f%%\n",
-				c.Symbol, name, c.YtdReturn.Raw*100, c.GrowthEstimate.Raw*100)
+				c.Symbol, truncate(c.Name, 24), c.YtdReturn.Raw*100, c.GrowthEstimate.Raw*100)
 		}
 	}
 
@@ -905,19 +889,11 @@ func formatMarketSummary(market string, items []yahoo.MarketSummaryItem) string 
 	fmt.Fprintf(&b, "%s\n", strings.Repeat("-", 78))
 
 	for _, item := range items {
-		name := item.ShortName
-		if len(name) > 29 {
-			name = name[:27] + ".."
-		}
-		sign := "+"
-		if item.RegularMarketChange < 0 {
-			sign = ""
-		}
-		fmt.Fprintf(&b, "%-12s %-30s %12.2f %s%9.2f %s%6.2f%%\n",
-			item.Symbol, name,
+		fmt.Fprintf(&b, "%-12s %-30s %12.2f %10s %8s\n",
+			item.Symbol, truncate(item.ShortName, 29),
 			item.RegularMarketPrice,
-			sign, item.RegularMarketChange,
-			sign, item.RegularMarketChangePercent)
+			fmtSigned(item.RegularMarketChange),
+			fmtSigned(item.RegularMarketChangePercent)+"%")
 	}
 
 	return b.String()
@@ -957,6 +933,21 @@ func formatMarketStatus(market string, groups []yahoo.MarketTimeGroup) string {
 }
 
 // --- Formatting helpers ---
+
+// fmtSigned formats a change value with an explicit sign, e.g. "+1.60" / "-1.28".
+func fmtSigned(val float64) string {
+	return fmt.Sprintf("%+.2f", val)
+}
+
+// truncate shortens s to at most max runes, replacing the tail with "..".
+// It counts runes rather than bytes so multibyte names are never split.
+func truncate(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return strings.TrimRight(string(r[:max-2]), " ") + ".."
+}
 
 // chartLocation resolves the exchange timezone from chart metadata so rows
 // print in market-local time rather than wherever the server happens to run.
